@@ -2,6 +2,10 @@
 
 All notable changes to `laravel-sync-tracker` will be documented in this file.
 
-## 1.0.0 - 202X-XX-XX
+## Unreleased Changes
+
+- 
+
+## 1.0.0 - 2025-03-12
 
 - Initial release
