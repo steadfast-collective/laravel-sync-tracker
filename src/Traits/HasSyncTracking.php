@@ -42,6 +42,21 @@ trait HasSyncTracking
         });
     }
 
+    public static function findByExternalId(string $externalId, ?string $source = null)
+    {
+        $tracking = SyncTrackedEntity::where([
+            'external_id' => $externalId,
+            'source' => $source,
+            'trackable_type' => static::class,
+        ])->first();
+
+        if (! $tracking) {
+            return null;
+        }
+
+        return $tracking->trackable;
+    }
+
     /**
      * Get the sync tracking information for this model.
      */
