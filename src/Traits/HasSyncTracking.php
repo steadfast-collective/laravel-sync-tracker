@@ -92,6 +92,19 @@ trait HasSyncTracking
     }
 
     /**
+     * Update this models sync metadata
+     */
+    public function updateSyncMetadata(array $metadata, ?string $source = null): SyncTrackedEntity
+    {
+        return $this->syncTracking()->updateOrCreate(
+            ['trackable_type' => get_class($this), 'trackable_id' => $this->getKey(), 'source' => $source],
+            [
+                'metadata' => $metadata,
+            ]
+        );
+    }
+
+    /**
      * Check if this model has been synced.
      */
     public function isSynced(): bool
