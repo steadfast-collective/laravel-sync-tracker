@@ -152,6 +152,26 @@ if (SyncTracker::isSynced($model)) {
 $user = SyncTracker::findByExternalId('external-123', 'salesforce', User::class);
 ```
 
+### Working with Metadata
+You can store arbitrary metadata related to your sync status using `setSyncMetadata` and `mergeSyncMetadata`:
+
+```php
+$user = User::find(1);
+
+// Set all the metadata after pushing
+$user->setSyncMetadata([
+    'remote_modified_at' => $responseData['modified_at'],
+    'direction' => 'pull',
+    'status' => 'success',
+]);
+
+// Use mergeSyncMetadata to only update some fields. remote_modified_at won't be touched.
+$user->mergeSyncMetadata([
+    'direction' => 'push',
+    'status' => 'failed',
+]);
+```
+
 ## Advanced Usage
 
 ### Sync Multiple Source Systems

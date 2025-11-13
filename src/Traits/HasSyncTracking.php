@@ -92,15 +92,35 @@ trait HasSyncTracking
     }
 
     /**
-     * Update this models sync metadata
+     * Overwrite this models sync metadata with the given metadata.
      */
-    public function updateSyncMetadata(array $metadata, ?string $source = null): SyncTrackedEntity
+    public function setSyncMetadata(array $metadata, ?string $source = null): SyncTrackedEntity
     {
-        return $this->syncTracking()->updateOrCreate(
+        $return = $this->syncTracking()->updateOrCreate(
             ['trackable_type' => get_class($this), 'trackable_id' => $this->getKey(), 'source' => $source],
             [
                 'metadata' => $metadata,
             ]
+        );
+
+        if ($this->relationLoaded('syncTracking')) {
+            $this->syncTracking->setAttribute('metadata', $metadata);
+        }
+
+        return $return;
+    }
+
+    /**
+     * Update this models sync metadata with the given fields. Don't change the other fields.
+     */
+    public function mergeSyncMetadata(array $metadata, ?string $source = null): SyncTrackedEntity
+    {
+        return $this->setSyncMetadata(
+            [
+                ...($this->getSyncMetadata() ?? []),
+                ...$metadata,
+            ],
+            $source
         );
     }
 
