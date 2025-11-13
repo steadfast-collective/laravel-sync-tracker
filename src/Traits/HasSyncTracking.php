@@ -80,7 +80,7 @@ trait HasSyncTracking
      */
     public function markAsSynced(?string $externalId = null, ?string $source = null, array $metadata = []): SyncTrackedEntity
     {
-        throw_if (
+        throw_if(
             $this->relationLoaded('syncTracking') && $this->syncTracking->isDirty(),
             'Please save your syncTracking model before using markAsSynced to avoid data loss'
         );
@@ -95,7 +95,9 @@ trait HasSyncTracking
             ]
         );
 
-        $this->unsetRelation('syncTracking');
+        if ($this->relationLoaded('syncTracking')) {
+            $this->syncTracking->refresh();
+        }
 
         return $return;
     }
@@ -105,7 +107,10 @@ trait HasSyncTracking
      */
     public function setSyncMetadata(array $metadata, ?string $source = null): SyncTrackedEntity
     {
-        ray('Setting MEtadata', $metadata);
+        throw_if(
+            $this->relationLoaded('syncTracking') && $this->syncTracking->isDirty(),
+            'Please save your syncTracking model before setting meta data to avoid data loss'
+        );
         $return = $this->syncTracking()->updateOrCreate(
             ['trackable_type' => get_class($this), 'trackable_id' => $this->getKey(), 'source' => $source],
             [
@@ -114,7 +119,7 @@ trait HasSyncTracking
         );
 
         if ($this->relationLoaded('syncTracking')) {
-            $this->syncTracking->setAttribute('metadata', $metadata);
+            $this->syncTracking->refresh();
         }
 
         return $return;
