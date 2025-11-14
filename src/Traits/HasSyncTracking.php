@@ -48,7 +48,9 @@ trait HasSyncTracking
             'external_id' => $externalId,
             'source' => $source,
             'trackable_type' => static::class,
-        ])->first();
+        ])
+            ->whereHas('trackable')
+            ->first();
 
         if (! $tracking) {
             return null;
