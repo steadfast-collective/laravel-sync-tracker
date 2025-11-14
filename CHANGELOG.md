@@ -11,7 +11,7 @@ Added:
 
 Breaking:
 
-- Made the $metadata parameter of markSynced nullable to update SyncData without changing metadata
+- Made all parameters of markSynced nullable to update SyncData timestamps without having to pass the data every time.
 
 ## 1.0.0 - 2025-03-12
 

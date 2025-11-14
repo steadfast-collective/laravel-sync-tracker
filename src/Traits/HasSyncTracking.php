@@ -85,18 +85,29 @@ trait HasSyncTracking
             'Please save your syncTracking model before using markAsSynced to avoid data loss'
         );
 
-        $return = $this->syncTracking()->updateOrCreate(
-            ['trackable_type' => get_class($this), 'trackable_id' => $this->getKey()],
-            [
-                'external_id' => $externalId,
-                'source' => $source,
-                'synced_at' => now(),
-            ]
-        );
+        // The values to update
+        $values = [
+            'synced_at' => now(),
+        ];
 
         if ($metadata !== null) {
-            $this->setSyncMetadata($metadata, $source);
+            $values['metadata'] = $metadata;
         }
+
+        if ($externalId !== null) {
+            $values['external_id'] = $externalId;
+        }
+
+        // TODO: I believe source should be passed as a matching $attribute to avoid overwriting the wrong
+        //       source when calling markAsSynced for a different source.
+        if ($source !== null) {
+            $values['source'] = $source;
+        }
+
+        $return = $this->syncTracking()->updateOrCreate(
+            ['trackable_type' => get_class($this), 'trackable_id' => $this->getKey()],
+            $values,
+        );
 
         if ($this->relationLoaded('syncTracking')) {
             $this->syncTracking->refresh();
