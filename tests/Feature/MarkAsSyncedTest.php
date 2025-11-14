@@ -26,3 +26,28 @@ it('can mark a model as synced using trait', function () {
     expect($model->getSyncSource())->toBe('erp');
     expect($model->getSyncMetadata())->toBe(['foo' => 'bar']);
 });
+
+it('can mark a model as synced without metadata using trait', function () {
+    $model = TestModel::create(['name' => 'Test With Trait']);
+
+    $model->markAsSynced('ext-xyz', 'erp');
+
+    expect($model->isSynced())->toBeTrue();
+    expect($model->getExternalId())->toBe('ext-xyz');
+    expect($model->getSyncSource())->toBe('erp');
+    expect($model->getSyncMetadata())->toBe(null);
+});
+
+it('can mark a model as synced without overwriting metadata using trait', function () {
+    $model = TestModel::create(['name' => 'Test With Trait']);
+
+    // Mark as synced and set some metadata
+    $model->markAsSynced('ext-xyz', 'erp', ['foo' => 'bar']);
+    expect($model->getSyncMetadata())->toBe(['foo' => 'bar']);
+
+    // Mark as synced again without setting it
+    $model->markAsSynced('ext-xyz', 'erp');
+
+    // Check the metadata was not changed
+    expect($model->getSyncMetadata())->toBe(['foo' => 'bar']);
+});

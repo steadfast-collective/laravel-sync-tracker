@@ -78,7 +78,7 @@ trait HasSyncTracking
     /**
      * Mark this model as synced.
      */
-    public function markAsSynced(?string $externalId = null, ?string $source = null, array $metadata = []): SyncTrackedEntity
+    public function markAsSynced(?string $externalId = null, ?string $source = null, ?array $metadata = null): SyncTrackedEntity
     {
         throw_if(
             $this->relationLoaded('syncTracking') && $this->syncTracking->isDirty(),
@@ -90,10 +90,13 @@ trait HasSyncTracking
             [
                 'external_id' => $externalId,
                 'source' => $source,
-                'metadata' => $metadata,
                 'synced_at' => now(),
             ]
         );
+
+        if ($metadata !== null) {
+            $this->setSyncMetadata($metadata, $source);
+        }
 
         if ($this->relationLoaded('syncTracking')) {
             $this->syncTracking->refresh();
