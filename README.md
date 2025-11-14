@@ -14,6 +14,17 @@
 
 A powerful Laravel package for tracking entity synchronization status between systems. Easily manage data synchronization between your Laravel application and external services like CRMs, ERPs, or any third-party API.
 
+## Details about this fork
+This fork builds on the excellent work of @andreagroferreira with a few changes to suit our usage needs.
+
+We hope in time to offer PRs back to the source branch for any of our changes which fit with the needs of the main package.
+
+A few high-level (usually breaking) changes include:
+
+- Separating the sync metadata from the main sync data. So you can call `markAsSynced` without updating the meta, and introducing options to merge instead of totally overwriting the metadata.
+
+Most of these changes will be made to Trait usage because that's how we're using it. PRs with tests to add the Facade options are welcome.
+
 ## Features
 
 - 🔄 **Track sync status** of any Eloquent model with external systems
