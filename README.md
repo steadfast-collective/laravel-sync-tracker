@@ -19,11 +19,11 @@ This fork builds on the excellent work of @andreagroferreira with a few changes 
 
 We hope in time to offer PRs back to the source branch for any of our changes which fit with the needs of the main package.
 
-A few high-level (usually breaking) changes include:
+A few misc notes about the changes or observations which might be useful:
 
-- Separating the sync metadata from the main sync data. So you can call `markAsSynced` without updating the meta, and introducing options to merge instead of totally overwriting the metadata.
-
-Most of these changes will be made to Trait usage because that's how we're using it. PRs with tests to add the Facade options are welcome.
+ - Most of these changes will be made to Trait usage because that's how we're using it. PRs with tests for the Facade options are welcome.
+ - We are separating the sync metadata from the main sync data. So you can call `markAsSynced` without updating the meta, and introducing options to merge instead of totally overwriting the metadata.
+ - I suspect there are some bugs related to the different sources, we are not working with multiple sources so I'm not looking into them. For example I think `markAsSynced` should pass the source as the matching attributes, instead of values.
 
 ## Features
 
