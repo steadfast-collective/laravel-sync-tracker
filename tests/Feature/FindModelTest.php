@@ -10,6 +10,7 @@ it('can find a model by external id', function () {
     $model = TestModel::create(['name' => 'Test Model']);
     SyncTracker::markAsSynced($model, 'ext-abc', 'crm');
 
+    /** @var TestModel $found */
     $found = SyncTracker::findByExternalId('ext-abc', 'crm', TestModel::class);
 
     expect($found)->not->toBeNull();

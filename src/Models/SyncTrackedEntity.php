@@ -18,7 +18,6 @@ use Illuminate\Database\Eloquent\Relations\MorphTo;
  * @property \Illuminate\Support\Carbon|null $deleted_at
  * @property array<array-key, mixed>|null $metadata
  *
- * @method static \Illuminate\Database\Eloquent\Builder<static>|SyncTrackedEntity where()
  * @method static \Illuminate\Database\Eloquent\Builder<static>|SyncTrackedEntity newModelQuery()
  * @method static \Illuminate\Database\Eloquent\Builder<static>|SyncTrackedEntity newQuery()
  * @method static \Illuminate\Database\Eloquent\Builder<static>|SyncTrackedEntity query()
@@ -33,15 +32,13 @@ use Illuminate\Database\Eloquent\Relations\MorphTo;
  * @method static \Illuminate\Database\Eloquent\Builder<static>|SyncTrackedEntity whereUpdatedat($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|SyncTrackedEntity whereDeletedat($value)
  * @method static \Illuminate\Database\Eloquent\Builder<static>|SyncTrackedEntity whereMetadata($value)
- *
- * @mixin \Eloquent
  */
 class SyncTrackedEntity extends Model
 {
     /**
      * The attributes that are mass assignable.
      *
-     * @var array
+     * @var list<string>
      */
     protected $fillable = [
         'trackable_type',
@@ -58,7 +55,7 @@ class SyncTrackedEntity extends Model
     /**
      * The attributes that should be cast.
      *
-     * @var array
+     * @var array<string, string>
      */
     protected $casts = [
         'synced_at' => 'datetime',

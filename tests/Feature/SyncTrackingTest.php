@@ -31,6 +31,7 @@ class SyncTrackingTest extends TestCase
         $model = TestModel::create(['name' => 'Test Model']);
         SyncTracker::markAsSynced($model, 'ext-abc', 'crm');
 
+        /** @var ?TestModel $found */
         $found = SyncTracker::findByExternalId('ext-abc', 'crm', TestModel::class);
 
         $this->assertNotNull($found);

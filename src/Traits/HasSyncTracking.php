@@ -61,6 +61,8 @@ trait HasSyncTracking
 
     /**
      * Get the sync tracking information for this model.
+     *
+     * @return MorphOne<SyncTrackedEntity, $this>
      */
     public function syncTracking(): MorphOne
     {
