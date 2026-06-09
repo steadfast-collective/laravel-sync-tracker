@@ -16,6 +16,7 @@ class SyncTracker
             [
                 'trackable_type' => get_class($model),
                 'trackable_id' => $model->getKey(),
+                'source' => $attributes['source'] ?? null,
             ],
             array_merge([
                 'synced_at' => now(),
@@ -53,7 +54,10 @@ class SyncTracker
         return SyncTrackedEntity::where([
             'trackable_type' => get_class($model),
             'trackable_id' => $model->getKey(),
-        ])->first();
+        ])
+            ->orderByDesc('synced_at')
+            ->orderByDesc('id')
+            ->first();
     }
 
     /**

@@ -2,6 +2,7 @@
 
 namespace WizardingCode\FlowNetwork\SyncTracker\Traits;
 
+use Illuminate\Database\Eloquent\Relations\MorphMany;
 use Illuminate\Database\Eloquent\Relations\MorphOne;
 use WizardingCode\FlowNetwork\SyncTracker\Models\SyncTrackedEntity;
 
@@ -66,15 +67,21 @@ trait HasSyncTracking
      */
     public function syncTracking(): MorphOne
     {
-        return $this->morphOne(SyncTrackedEntity::class, 'trackable');
+        // A model may be tracked against several sources. When no source is
+        // specified, prefer the most recently synced row (falling back to the
+        // newest row) so the single-source getters return real sync data
+        // rather than an auto-created lifecycle row.
+        return $this->morphOne(SyncTrackedEntity::class, 'trackable')
+            ->orderByDesc('synced_at')
+            ->orderByDesc('id');
     }
 
     /**
      * Get all sync tracking entries for this model.
      *
-     * @return \Illuminate\Database\Eloquent\Relations\MorphMany
+     * @return MorphMany<SyncTrackedEntity, $this>
      */
-    public function syncTrackers()
+    public function syncTrackers(): MorphMany
     {
         return $this->morphMany(SyncTrackedEntity::class, 'trackable');
     }
@@ -102,14 +109,8 @@ trait HasSyncTracking
             $values['external_id'] = $externalId;
         }
 
-        // TODO: I believe source should be passed as a matching $attribute to avoid overwriting the wrong
-        //       source when calling markAsSynced for a different source.
-        if ($source !== null) {
-            $values['source'] = $source;
-        }
-
         $return = $this->syncTracking()->updateOrCreate(
-            ['trackable_type' => get_class($this), 'trackable_id' => $this->getKey()],
+            ['trackable_type' => get_class($this), 'trackable_id' => $this->getKey(), 'source' => $source],
             $values,
         );
 
