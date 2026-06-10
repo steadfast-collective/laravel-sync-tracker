@@ -1,9 +1,10 @@
 <?php
 
 use WizardingCode\FlowNetwork\SyncTracker\Models\SyncTrackedEntity;
+use WizardingCode\FlowNetwork\SyncTracker\Tests\TestCase;
 
 // Make sure to use the TestCase to have Laravel set up
-uses(WizardingCode\FlowNetwork\SyncTracker\Tests\TestCase::class);
+uses(TestCase::class);
 
 it('loads configuration correctly', function () {
     // Test default config values
