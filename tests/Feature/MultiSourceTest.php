@@ -132,3 +132,48 @@ it('merges metadata against the correct source only', function () {
     expect($model->syncTrackers()->where('source', 'source-2')->first()->metadata)->toBe(['b' => 2, 'c' => 3]);
     expect($model->syncTrackers()->where('source', 'source-1')->first()->metadata)->toBe(['a' => 1]);
 });
+
+it('merges metadata against a source that is not the most recently synced row', function () {
+    $model = TestModel::create(['name' => 'Test Model']);
+
+    Carbon::setTestNow('2026-01-01 10:00:00');
+    $model->markAsSynced('ext-1', 'source-1', ['a' => 1]);
+
+    Carbon::setTestNow('2026-01-02 10:00:00');
+    $model->markAsSynced('ext-2', 'source-2', ['b' => 2]);
+
+    Carbon::setTestNow();
+
+    $model->mergeSyncMetadata(['c' => 3], 'source-1');
+
+    // source-1 keeps its own metadata plus the merged key...
+    expect($model->syncTrackers()->where('source', 'source-1')->first()->metadata)->toBe(['a' => 1, 'c' => 3]);
+
+    // ...and the more recently synced source-2 row stays untouched.
+    expect($model->syncTrackers()->where('source', 'source-2')->first()->metadata)->toBe(['b' => 2]);
+});
+
+it('merges metadata into the sourceless row when no source is given', function () {
+    $model = TestModel::create(['name' => 'Test Model']);
+
+    $model->setSyncMetadata(['lifecycle' => true], null);
+    $model->markAsSynced('ext-1', 'source-1', ['a' => 1]);
+
+    // source-1 is the most recently synced row, but a null source must
+    // target the sourceless row.
+    $model->mergeSyncMetadata(['merged' => true], null);
+
+    expect($model->syncTrackers()->whereNull('source')->first()->metadata)->toBe(['lifecycle' => true, 'merged' => true]);
+    expect($model->syncTrackers()->where('source', 'source-1')->first()->metadata)->toBe(['a' => 1]);
+});
+
+it('creates the tracking row when merging metadata for a previously unsynced source', function () {
+    $model = TestModel::create(['name' => 'Test Model']);
+
+    $model->markAsSynced('ext-1', 'source-1', ['a' => 1]);
+
+    $model->mergeSyncMetadata(['fresh' => true], 'source-2');
+
+    // Only the merged keys — nothing inherited from another source's row.
+    expect($model->syncTrackers()->where('source', 'source-2')->first()->metadata)->toBe(['fresh' => true]);
+});

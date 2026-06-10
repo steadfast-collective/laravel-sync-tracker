@@ -161,9 +161,17 @@ trait HasSyncTracking
     {
         EmptySourceException::throwIfDisallowed($source);
 
+        // Read the existing metadata from the row matching the given source,
+        // not from the ordered syncTracking relation — that resolves to the
+        // most recently synced row regardless of source, which would merge
+        // another source's metadata into this one.
+        $existing = $this->syncTracking()
+            ->where('source', $source)
+            ->value('metadata');
+
         return $this->setSyncMetadata(
             [
-                ...($this->getSyncMetadata() ?? []),
+                ...($existing ?? []),
                 ...$metadata,
             ],
             $source
