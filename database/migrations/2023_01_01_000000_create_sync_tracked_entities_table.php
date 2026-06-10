@@ -24,7 +24,7 @@ class CreateSyncTrackedEntitiesTable extends Migration
             $table->timestamp('deleted_at')->nullable();
             $table->json('metadata')->nullable();
 
-            $table->unique(['trackable_type', 'trackable_id', 'source']);
+            $table->unique(['trackable_type', 'trackable_id']);
             $table->index(['external_id', 'source']);
         });
     }

@@ -22,4 +22,8 @@ it('allows overriding table name', function () {
     // Instantiate model to verify it uses the config
     $model = new SyncTrackedEntity;
     expect($model->getTable())->toBe('custom_sync_table');
+
+    // Restore the default so the migration rollback during teardown
+    // targets the table that was actually migrated.
+    config(['sync-tracker.table_name' => 'sync_tracked_entities']);
 });
