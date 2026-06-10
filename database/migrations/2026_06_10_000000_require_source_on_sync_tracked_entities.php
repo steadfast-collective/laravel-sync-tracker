@@ -7,7 +7,15 @@ use Illuminate\Support\Facades\Schema;
 return new class extends Migration
 {
     /**
-     * Run the migrations.
+     * One tracking row per model per source: `source` joins the unique index
+     * and becomes NOT NULL (lifecycle rows use the '_lifecycle' sentinel
+     * instead of NULL, so the unique index can actually enforce uniqueness —
+     * SQL treats NULLs as distinct).
+     *
+     * Existing installs must clean up their NULL-source rows BEFORE running
+     * this migration (deduplicate, then backfill) — see UPGRADE.md. On
+     * Laravel 10 the column change additionally requires the doctrine/dbal
+     * package.
      *
      * @return void
      */
@@ -16,6 +24,10 @@ return new class extends Migration
         Schema::table(config('sync-tracker.table_name', 'sync_tracked_entities'), function (Blueprint $table) {
             $table->dropUnique(['trackable_type', 'trackable_id']);
             $table->unique(['trackable_type', 'trackable_id', 'source']);
+        });
+
+        Schema::table(config('sync-tracker.table_name', 'sync_tracked_entities'), function (Blueprint $table) {
+            $table->string('source')->nullable(false)->change();
         });
     }
 
@@ -29,6 +41,10 @@ return new class extends Migration
      */
     public function down()
     {
+        Schema::table(config('sync-tracker.table_name', 'sync_tracked_entities'), function (Blueprint $table) {
+            $table->string('source')->nullable()->change();
+        });
+
         Schema::table(config('sync-tracker.table_name', 'sync_tracked_entities'), function (Blueprint $table) {
             $table->dropUnique(['trackable_type', 'trackable_id', 'source']);
             $table->unique(['trackable_type', 'trackable_id']);

@@ -15,15 +15,13 @@
 A powerful Laravel package for tracking entity synchronization status between systems. Easily manage data synchronization between your Laravel application and external services like CRMs, ERPs, or any third-party API.
 
 ## Details about this fork
-This fork builds on the excellent work of @andreagroferreira with a few changes to suit our usage needs.
-
-We hope in time to offer PRs back to the source branch for any of our changes which fit with the needs of the main package.
+This fork builds on the excellent work of @andreagroferreira with some major changes to support our needs and fix some bugs.
 
 A few misc notes about the changes or observations which might be useful:
 
  - Most of these changes will be made to Trait usage because that's how we're using it. PRs with tests for the Facade options are welcome.
  - We are separating the sync metadata from the main sync data. So you can call `markAsSynced` without updating the meta, and introducing options to merge instead of totally overwriting the metadata.
- - I suspect there are some bugs related to the different sources, we are not working with multiple sources so I'm not looking into them. For example I think `markAsSynced` should pass the source as the matching attributes, instead of values.
+ - The sync API is source-scoped: `$model->syncData($source)` returns the tracking entity for one source, and all reads/writes happen on it. All methods should now go via `->syncData()` and the previous methods are deprecated (and still buggy with multiple sources)
 
 ## Features
 
@@ -85,10 +83,10 @@ return [
     // The table name used to store sync tracking information
     'table_name' => 'sync_tracked_entities',
 
-    // Whether a tracking call may omit the sync source. Disable to make
-    // markAsSynced, setSyncMetadata, mergeSyncMetadata and findByExternalId
-    // throw an EmptySourceException when no source is passed, preventing
-    // rows from being accidentally tracked without a source.
+    // Whether a tracking call may omit the sync source.
+    // Disable to make syncData, markAsSynced, setSyncMetadata, mergeSyncMetadata
+    //  and findByExternalId throw an EmptySourceException when no source is
+    // passed.
     'allow_empty_source' => true,
 
     // Default tracking options
@@ -133,24 +131,26 @@ class User extends Model
 }
 ```
 
-Then you can use the methods provided by the trait:
+Then use `syncData($source)` to get the source-scoped tracking entity. Everything happens on that entity, so once you have it no other call needs a source:
 
 ```php
 $user = User::find(1);
 
 // Mark the model as synced
-$user->markAsSynced('external-123', 'salesforce', ['meta' => 'data']);
+$user->syncData('salesforce')->markAsSynced('external-123', ['meta' => 'data']);
 
-// Check if model is synced
-if ($user->isSynced()) {
+// Check if model is synced with that source
+if ($user->syncData('salesforce')->isSynced()) {
     // Do something
 }
 
-// Get sync information
-$externalId = $user->getExternalId();
-$source = $user->getSyncSource();
-$metadata = $user->getSyncMetadata();
+// Read sync information — the entity is a plain Eloquent model
+$externalId = $user->syncData('salesforce')->external_id;
+$metadata = $user->syncData('salesforce')->metadata;
+$syncedAt = $user->syncData('salesforce')->synced_at;
 ```
+
+> **Upgrading?** The pre-`syncData()` methods (`$user->markAsSynced(...)`, `getExternalId()`, etc.) keep working as deprecated delegates. See [UPGRADE.md](UPGRADE.md) for the full mapping and an AI migration prompt.
 
 ### Using the Facade
 
@@ -160,10 +160,13 @@ use WizardingCode\FlowNetwork\SyncTracker\Facades\SyncTracker;
 // Mark a model as synced
 SyncTracker::markAsSynced($model, 'external-123', 'salesforce', ['meta' => 'data']);
 
-// Check if model is synced
-if (SyncTracker::isSynced($model)) {
+// Check if model is synced (optionally with a specific source)
+if (SyncTracker::isSynced($model, 'salesforce')) {
     // Do something
 }
+
+// Get a source's tracking row (or the most recently synced one when no source is given)
+$syncInfo = SyncTracker::getSyncInfo($model, 'salesforce');
 
 // Find a model by external ID and source
 $user = SyncTracker::findByExternalId('external-123', 'salesforce', User::class);
@@ -176,14 +179,14 @@ You can store arbitrary metadata related to your sync status using `setSyncMetad
 $user = User::find(1);
 
 // Set all the metadata after pushing
-$user->setSyncMetadata([
+$user->syncData('crm')->setSyncMetadata([
     'remote_modified_at' => $responseData['modified_at'],
     'direction' => 'pull',
     'status' => 'success',
 ]);
 
 // Use mergeSyncMetadata to only update some fields. remote_modified_at won't be touched.
-$user->mergeSyncMetadata([
+$user->syncData('crm')->mergeSyncMetadata([
     'direction' => 'push',
     'status' => 'failed',
 ]);
@@ -200,23 +203,23 @@ Track entities that exist in multiple external systems:
 $user = User::find(1);
 
 // Mark as synced with Salesforce
-$user->markAsSynced('SF-123456', 'salesforce', [
+$user->syncData('salesforce')->markAsSynced('SF-123456', [
     'last_sync' => now(),
     'account_type' => 'customer'
 ]);
 
 // In another part of your app, sync with HubSpot
-SyncTracker::markAsSynced($user, 'HS-789012', 'hubspot', [
+$user->syncData('hubspot')->markAsSynced('HS-789012', [
     'contact_owner' => 'jane.doe@example.com',
     'lead_score' => 85
 ]);
 
-// Get all sync trackers for this user
-$syncTrackers = $user->syncTrackers()->get();
+// Get all sync trackers for this user (excluding the lifecycle row)
+$syncTrackers = $user->syncTrackers()->withoutLifecycle()->get();
 
 // Check if synced with specific system
-$salesforceId = $user->getExternalIdFromSource('salesforce');
-$hubspotId = $user->getExternalIdFromSource('hubspot');
+$salesforceId = $user->syncData('salesforce')->external_id;
+$hubspotId = $user->syncData('hubspot')->external_id;
 ```
 
 ### Batch Synchronization with Progress Tracking

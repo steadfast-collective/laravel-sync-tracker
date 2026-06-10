@@ -2,6 +2,7 @@
 
 use Illuminate\Support\Carbon;
 use WizardingCode\FlowNetwork\SyncTracker\Facades\SyncTracker;
+use WizardingCode\FlowNetwork\SyncTracker\Models\SyncTrackedEntity;
 use WizardingCode\FlowNetwork\SyncTracker\Tests\Models\TestModel;
 use WizardingCode\FlowNetwork\SyncTracker\Tests\TestCase;
 
@@ -14,7 +15,9 @@ uses(TestCase::class);
 |--------------------------------------------------------------------------
 |
 | These tests describe the intended behaviour of tracking a single model
-| against multiple sources at once.
+| against multiple sources at once. They go through the deprecated
+| delegates where the old API is the point — the delegates must keep the
+| same per-source behaviour as the syncData() API they forward to.
 |
 */
 
@@ -24,7 +27,7 @@ it('markAsSynced tracks each source as its own row', function () {
     $model->markAsSynced('ext-1', 'source-1');
     $model->markAsSynced('ext-2', 'source-2');
 
-    expect($model->syncTrackers()->whereNotNull('source')->count())->toBe(2);
+    expect($model->syncTrackers()->withoutLifecycle()->count())->toBe(2);
     expect($model->getExternalIdFromSource('source-1'))->toBe('ext-1');
     expect($model->getExternalIdFromSource('source-2'))->toBe('ext-2');
 });
@@ -45,7 +48,7 @@ it('markAsSynced via the facade tracks each source as its own row', function () 
     SyncTracker::markAsSynced($model, 'ext-1', 'source-1');
     SyncTracker::markAsSynced($model, 'ext-2', 'source-2');
 
-    expect($model->syncTrackers()->whereNotNull('source')->count())->toBe(2);
+    expect($model->syncTrackers()->withoutLifecycle()->count())->toBe(2);
 });
 
 it('findByExternalId resolves the model matching the source', function (string $externalId, string $source, ?string $expected) {
@@ -67,14 +70,6 @@ it('findByExternalId resolves the model matching the source', function (string $
     'unknown source resolves to null' => ['shared-id', 'unknown', null],
     'missing external id resolves to null' => ['missing', 'source-1', null],
 ]);
-
-it('findByExternalId matches the sourceless row when source is null', function () {
-    $model = TestModel::create(['name' => 'Test Model']);
-
-    $model->markAsSynced('no-src', null);
-
-    expect(TestModel::findByExternalId('no-src')?->id)->toBe($model->id);
-});
 
 it('findByExternalId returns null when the tracked model row is gone', function () {
     $model = TestModel::create(['name' => 'Test Model']);
@@ -104,11 +99,15 @@ it('orderByMostRecentlySynced sorts the lifecycle row last', function () {
 
     // Most recently synced first, the lifecycle row always last.
     expect($model->syncTrackers()->orderByMostRecentlySynced()->pluck('source')->all())
-        ->toBe(['source-new', 'source-old', null]);
+        ->toBe(['source-new', 'source-old', SyncTrackedEntity::LIFECYCLE_SOURCE]);
 
-    // The single-source getters read from the top of that order.
+    // The deprecated single-source getters read from the top of that order.
     expect($model->fresh()->getExternalId())->toBe('ext-new');
     expect($model->fresh()->isSynced())->toBeTrue();
+
+    // The facade's sourceless lookup reads the same order, excluding the
+    // lifecycle row.
+    expect(SyncTracker::getSyncInfo($model)->external_id)->toBe('ext-new');
 });
 
 it('setSyncMetadata keeps metadata separate per source', function () {
@@ -151,20 +150,6 @@ it('mergeSyncMetadata targets the requested source even when another source sync
 
     // ...and the more recently synced source-2 row stays untouched.
     expect($model->syncTrackers()->where('source', 'source-2')->first()->metadata)->toBe(['b' => 2]);
-});
-
-it('mergeSyncMetadata targets the sourceless row when no source is given', function () {
-    $model = TestModel::create(['name' => 'Test Model']);
-
-    $model->setSyncMetadata(['lifecycle' => true], null);
-    $model->markAsSynced('ext-1', 'source-1', ['a' => 1]);
-
-    // source-1 is the most recently synced row, but a null source must
-    // target the sourceless row.
-    $model->mergeSyncMetadata(['merged' => true], null);
-
-    expect($model->syncTrackers()->whereNull('source')->first()->metadata)->toBe(['lifecycle' => true, 'merged' => true]);
-    expect($model->syncTrackers()->where('source', 'source-1')->first()->metadata)->toBe(['a' => 1]);
 });
 
 it('mergeSyncMetadata creates the row for a previously unsynced source', function () {

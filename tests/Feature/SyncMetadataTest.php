@@ -16,9 +16,9 @@ class SyncMetadataTest extends TestCase
         $metadata = [
             'foo' => 'bar',
         ];
-        $model->setSyncMetadata($metadata);
+        $model->syncData('erp')->setSyncMetadata($metadata);
 
-        $this->assertEquals($metadata, $model->getSyncMetadata());
+        $this->assertEquals($metadata, $model->syncData('erp')->metadata);
     }
 
     #[Test]
@@ -30,18 +30,30 @@ class SyncMetadataTest extends TestCase
             'foo' => 'bar',
             'hello' => 'world',
         ];
-        $model->setSyncMetadata($metadata);
+        $model->syncData('erp')->setSyncMetadata($metadata);
 
         $newMetadata = [
             'foo' => 'par',
             'goodbye' => 'universe',
         ];
-        $model->mergeSyncMetadata($newMetadata);
+        $model->syncData('erp')->mergeSyncMetadata($newMetadata);
 
         $this->assertEquals([
             'foo' => 'par',
             'hello' => 'world',
             'goodbye' => 'universe',
-        ], $model->getSyncMetadata());
+        ], $model->syncData('erp')->metadata);
+    }
+
+    #[Test]
+    public function deprecated_metadata_methods_delegate_to_the_source_scoped_entity()
+    {
+        $model = TestModel::create(['name' => 'Test Model']);
+
+        $model->setSyncMetadata(['foo' => 'bar'], 'erp');
+        $model->mergeSyncMetadata(['baz' => 'qux'], 'erp');
+
+        $this->assertEquals(['foo' => 'bar', 'baz' => 'qux'], $model->syncData('erp')->metadata);
+        $this->assertEquals(['foo' => 'bar', 'baz' => 'qux'], $model->getSyncMetadata());
     }
 }

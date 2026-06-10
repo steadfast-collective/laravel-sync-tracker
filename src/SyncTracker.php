@@ -3,7 +3,6 @@
 namespace WizardingCode\FlowNetwork\SyncTracker;
 
 use Illuminate\Database\Eloquent\Model;
-use WizardingCode\FlowNetwork\SyncTracker\Exceptions\EmptySourceException;
 use WizardingCode\FlowNetwork\SyncTracker\Models\SyncTrackedEntity;
 
 class SyncTracker
@@ -13,65 +12,56 @@ class SyncTracker
      */
     public function track(Model $model, array $attributes = []): SyncTrackedEntity
     {
-        EmptySourceException::throwIfDisallowed($attributes['source'] ?? null);
+        $entity = SyncTrackedEntity::for($model, $attributes['source'] ?? null);
 
-        return SyncTrackedEntity::updateOrCreate(
-            [
-                'trackable_type' => get_class($model),
-                'trackable_id' => $model->getKey(),
-                'source' => $attributes['source'] ?? null,
-            ],
-            array_merge([
-                'synced_at' => now(),
-            ], $attributes)
-        );
+        // for() already resolved the source; don't let a null in the
+        // attributes overwrite it.
+        unset($attributes['source']);
+
+        return $entity
+            ->fill(array_merge(['synced_at' => now()], $attributes))
+            ->saveTracked();
     }
 
     /**
-     * Mark a model as synced.
+     * Mark a model as synced. Only overwrites the external ID and metadata
+     * when new values are given. Fires an EntitySynced event.
      */
     public function markAsSynced(
         Model $model,
         ?string $externalId = null,
         ?string $source = null,
-        array $metadata = []
+        ?array $metadata = null
     ): SyncTrackedEntity {
-        EmptySourceException::throwIfDisallowed($source);
-
-        $syncInfo = $this->track($model, [
-            'external_id' => $externalId,
-            'source' => $source,
-            'metadata' => $metadata,
-            'synced_at' => now(),
-        ]);
-
-        // Dispatch an event when a model is synced
-        event(new \WizardingCode\FlowNetwork\SyncTracker\Events\EntitySynced($model, $syncInfo));
-
-        return $syncInfo;
+        return SyncTrackedEntity::for($model, $source)->markAsSynced($externalId, $metadata);
     }
 
     /**
      * Get the sync tracking information for a model.
+     *
+     * With a source, returns that source's row (or null when the model is
+     * not tracked against it). Without one, returns the most recently synced
+     * row across all sources — the never-synced lifecycle row sorts last, so
+     * it only surfaces when no other row exists.
      */
-    public function getSyncInfo(Model $model): ?SyncTrackedEntity
+    public function getSyncInfo(Model $model, ?string $source = null): ?SyncTrackedEntity
     {
-        return SyncTrackedEntity::where([
-            'trackable_type' => get_class($model),
-            'trackable_id' => $model->getKey(),
-        ])
-            ->orderByMostRecentlySynced()
-            ->first();
+        $query = SyncTrackedEntity::query()
+            ->where('trackable_type', $model->getMorphClass())
+            ->where('trackable_id', $model->getKey());
+
+        return $source !== null
+            ? $query->where('source', $source)->first()
+            : $query->orderByMostRecentlySynced()->first();
     }
 
     /**
-     * Check if a model has been synced.
+     * Check if a model has been synced — with the given source, or with any
+     * source when none is given.
      */
-    public function isSynced(Model $model): bool
+    public function isSynced(Model $model, ?string $source = null): bool
     {
-        $tracking = $this->getSyncInfo($model);
-
-        return $tracking && $tracking->synced_at !== null;
+        return $this->getSyncInfo($model, $source)?->isSynced() ?? false;
     }
 
     /**
@@ -82,13 +72,11 @@ class SyncTracker
         $tracking = SyncTrackedEntity::where([
             'external_id' => $externalId,
             'source' => $source,
-            'trackable_type' => $modelClass,
-        ])->first();
+            'trackable_type' => (new $modelClass)->getMorphClass(),
+        ])
+            ->whereHas('trackable')
+            ->first();
 
-        if (! $tracking) {
-            return null;
-        }
-
-        return $tracking->trackable;
+        return $tracking?->trackable;
     }
 }
