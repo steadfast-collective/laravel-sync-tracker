@@ -13,11 +13,9 @@ return [
     // The table name used to store sync tracking information
     'table_name' => 'sync_tracked_entities',
 
-    // Whether a tracking call may omit the sync source. When allowed,
-    // sourceless calls resolve to the 'default' source. Disable to make
-    // syncData, markAsSynced, setSyncMetadata, mergeSyncMetadata and
-    // findByExternalId throw an EmptySourceException when no source is
-    // passed, preventing rows from being accidentally tracked without a
+    // Whether a tracking call may omit the sync source. It's recommended you disable
+    // this when working with multiple-sources to enable strict-mode and avoid
+    // accidentally using 'default'
     // source. An empty source string always throws, and automatic lifecycle
     // tracking (created/updated/deleted) is always exempt.
     'allow_empty_source' => true,

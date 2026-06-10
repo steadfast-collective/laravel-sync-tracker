@@ -14,12 +14,9 @@ uses(TestCase::class);
 | Empty sources
 |--------------------------------------------------------------------------
 |
-| With sync-tracker.allow_empty_source enabled (the default), a call that
-| omits the source resolves to the '_lifecycle' row. With it disabled,
-| every sync API that accepts a source throws an EmptySourceException when
-| the source is omitted, so a source can never be forgotten by accident.
-| An empty source string always throws, and automatic lifecycle tracking
-| is always exempt.
+| With sync-tracker.allow_empty_source enabled (the default) not passing a source
+| sets the source to 'default' - disabling it throws an exception if a source
+| is not set.
 |
 */
 

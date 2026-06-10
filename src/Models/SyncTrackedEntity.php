@@ -5,7 +5,7 @@ namespace WizardingCode\FlowNetwork\SyncTracker\Models;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\MorphTo;
-use Illuminate\Database\QueryException;
+use Illuminate\Database\UniqueConstraintViolationException;
 use Illuminate\Support\Carbon;
 use InvalidArgumentException;
 use WizardingCode\FlowNetwork\SyncTracker\Events\EntitySynced;
@@ -207,10 +207,7 @@ class SyncTrackedEntity extends Model
     {
         try {
             $this->save();
-        } catch (QueryException $e) {
-            // QueryException rather than UniqueConstraintViolationException —
-            // the dedicated subclass doesn't exist on the oldest supported
-            // framework version.
+        } catch (UniqueConstraintViolationException $e) {
             $existing = static::query()->where([
                 'trackable_type' => $this->trackable_type,
                 'trackable_id' => $this->trackable_id,
