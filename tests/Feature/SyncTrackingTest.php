@@ -2,6 +2,7 @@
 
 namespace WizardingCode\FlowNetwork\SyncTracker\Tests\Feature;
 
+use PHPUnit\Framework\Attributes\Test;
 use WizardingCode\FlowNetwork\SyncTracker\Facades\SyncTracker;
 use WizardingCode\FlowNetwork\SyncTracker\Tests\Models\TestModel;
 use WizardingCode\FlowNetwork\SyncTracker\Tests\TestCase;
@@ -13,7 +14,7 @@ class SyncTrackingTest extends TestCase
         parent::setUp();
     }
 
-    /** @test */
+    #[Test]
     public function it_can_mark_a_model_as_synced()
     {
         $model = TestModel::create(['name' => 'Test Model']);
@@ -25,7 +26,7 @@ class SyncTrackingTest extends TestCase
         $this->assertEquals('api', SyncTracker::getSyncInfo($model)->source);
     }
 
-    /** @test */
+    #[Test]
     public function it_can_find_a_model_by_external_id()
     {
         $model = TestModel::create(['name' => 'Test Model']);
@@ -38,7 +39,7 @@ class SyncTrackingTest extends TestCase
         $this->assertEquals($model->id, $found->id);
     }
 
-    /** @test */
+    #[Test]
     public function it_can_use_trait_methods()
     {
         $model = TestModel::create(['name' => 'Test With Trait']);

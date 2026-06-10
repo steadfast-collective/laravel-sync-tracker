@@ -2,13 +2,14 @@
 
 namespace WizardingCode\FlowNetwork\SyncTracker\Tests\Feature;
 
+use PHPUnit\Framework\Attributes\Test;
 use WizardingCode\FlowNetwork\SyncTracker\Tests\Models\TestModel;
 use WizardingCode\FlowNetwork\SyncTracker\Tests\TestCase;
 
 class SyncMetadataTest extends TestCase
 {
-    /** @test */
-    public function it_can_set_the_metadata()
+    #[Test]
+    public function set_sync_metadata_stores_the_metadata()
     {
         $model = TestModel::create(['name' => 'Test Model']);
 
@@ -20,8 +21,8 @@ class SyncMetadataTest extends TestCase
         $this->assertEquals($metadata, $model->getSyncMetadata());
     }
 
-    /** @test */
-    public function it_can_merge_the_metadata()
+    #[Test]
+    public function merge_sync_metadata_merges_new_keys_over_existing()
     {
         $model = TestModel::create(['name' => 'Test Model']);
 

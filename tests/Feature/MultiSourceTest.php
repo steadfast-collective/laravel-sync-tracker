@@ -18,7 +18,7 @@ uses(TestCase::class);
 |
 */
 
-it('tracks the same model against multiple sources independently', function () {
+it('markAsSynced tracks each source as its own row', function () {
     $model = TestModel::create(['name' => 'Test Model']);
 
     $model->markAsSynced('ext-1', 'source-1');
@@ -29,7 +29,7 @@ it('tracks the same model against multiple sources independently', function () {
     expect($model->getExternalIdFromSource('source-2'))->toBe('ext-2');
 });
 
-it('updates the existing row when re-syncing the same source', function () {
+it('markAsSynced updates the existing row when re-syncing the same source', function () {
     $model = TestModel::create(['name' => 'Test Model']);
 
     $model->markAsSynced('ext-1', 'source-1');
@@ -39,7 +39,7 @@ it('updates the existing row when re-syncing the same source', function () {
     expect($model->getExternalIdFromSource('source-1'))->toBe('ext-1-updated');
 });
 
-it('tracks multiple sources via the facade independently', function () {
+it('markAsSynced via the facade tracks each source as its own row', function () {
     $model = TestModel::create(['name' => 'Test Model']);
 
     SyncTracker::markAsSynced($model, 'ext-1', 'source-1');
@@ -48,7 +48,7 @@ it('tracks multiple sources via the facade independently', function () {
     expect($model->syncTrackers()->whereNotNull('source')->count())->toBe(2);
 });
 
-it('finds the right model by external id and source', function (string $externalId, string $source, ?string $expected) {
+it('findByExternalId resolves the model matching the source', function (string $externalId, string $source, ?string $expected) {
     $a = TestModel::create(['name' => 'A']);
     $b = TestModel::create(['name' => 'B']);
     $a->markAsSynced('shared-id', 'source-1');
@@ -68,7 +68,7 @@ it('finds the right model by external id and source', function (string $external
     'missing external id resolves to null' => ['missing', 'source-1', null],
 ]);
 
-it('matches a sourceless tracking row when source is null', function () {
+it('findByExternalId matches the sourceless row when source is null', function () {
     $model = TestModel::create(['name' => 'Test Model']);
 
     $model->markAsSynced('no-src', null);
@@ -76,7 +76,7 @@ it('matches a sourceless tracking row when source is null', function () {
     expect(TestModel::findByExternalId('no-src')?->id)->toBe($model->id);
 });
 
-it('returns null when the trackable no longer exists', function () {
+it('findByExternalId returns null when the tracked model row is gone', function () {
     $model = TestModel::create(['name' => 'Test Model']);
     $model->markAsSynced('ext-1', 'source-1');
 
@@ -87,7 +87,7 @@ it('returns null when the trackable no longer exists', function () {
     expect(TestModel::findByExternalId('ext-1', 'source-1'))->toBeNull();
 });
 
-it('orders tracking rows with explicit null handling so lifecycle rows sort last on every database', function () {
+it('orderByMostRecentlySynced sorts the lifecycle row last', function () {
     // PostgreSQL sorts NULL first on a DESC order (MySQL/SQLite sort it
     // last), so the ordering must spell the null check out rather than
     // rely on plain `order by synced_at desc`. Creating the model also
@@ -111,7 +111,7 @@ it('orders tracking rows with explicit null handling so lifecycle rows sort last
     expect($model->fresh()->isSynced())->toBeTrue();
 });
 
-it('keeps metadata separate per source', function () {
+it('setSyncMetadata keeps metadata separate per source', function () {
     $model = TestModel::create(['name' => 'Test Model']);
 
     $model->setSyncMetadata(['k' => 'val-1'], 'source-1');
@@ -121,7 +121,7 @@ it('keeps metadata separate per source', function () {
     expect($model->syncTrackers()->where('source', 'source-2')->first()->metadata)->toBe(['k' => 'val-2']);
 });
 
-it('merges metadata against the correct source only', function () {
+it('mergeSyncMetadata merges into the requested source only', function () {
     $model = TestModel::create(['name' => 'Test Model']);
 
     $model->setSyncMetadata(['a' => 1], 'source-1');
@@ -133,7 +133,7 @@ it('merges metadata against the correct source only', function () {
     expect($model->syncTrackers()->where('source', 'source-1')->first()->metadata)->toBe(['a' => 1]);
 });
 
-it('merges metadata against a source that is not the most recently synced row', function () {
+it('mergeSyncMetadata targets the requested source even when another source synced more recently', function () {
     $model = TestModel::create(['name' => 'Test Model']);
 
     Carbon::setTestNow('2026-01-01 10:00:00');
@@ -153,7 +153,7 @@ it('merges metadata against a source that is not the most recently synced row', 
     expect($model->syncTrackers()->where('source', 'source-2')->first()->metadata)->toBe(['b' => 2]);
 });
 
-it('merges metadata into the sourceless row when no source is given', function () {
+it('mergeSyncMetadata targets the sourceless row when no source is given', function () {
     $model = TestModel::create(['name' => 'Test Model']);
 
     $model->setSyncMetadata(['lifecycle' => true], null);
@@ -167,7 +167,7 @@ it('merges metadata into the sourceless row when no source is given', function (
     expect($model->syncTrackers()->where('source', 'source-1')->first()->metadata)->toBe(['a' => 1]);
 });
 
-it('creates the tracking row when merging metadata for a previously unsynced source', function () {
+it('mergeSyncMetadata creates the row for a previously unsynced source', function () {
     $model = TestModel::create(['name' => 'Test Model']);
 
     $model->markAsSynced('ext-1', 'source-1', ['a' => 1]);

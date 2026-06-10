@@ -27,7 +27,7 @@ it('can mark a model as synced using trait', function () {
     expect($model->getSyncMetadata())->toBe(['foo' => 'bar']);
 });
 
-it('can mark a model as synced without updating extra data', function () {
+it('markAsSynced with no arguments refreshes the sync without clearing existing data', function () {
     $model = TestModel::create(['name' => 'Test With Trait']);
 
     // Mark as synced with all the details (id, source, metadata)
@@ -43,7 +43,7 @@ it('can mark a model as synced without updating extra data', function () {
     expect($model->getSyncMetadata())->toBe(['foo' => 'bar']);
 });
 
-it('can mark a model as synced without metadata using trait', function () {
+it('markAsSynced with no arguments on a fresh model leaves id, source and metadata null', function () {
     $model = TestModel::create(['name' => 'Test With Trait']);
 
     // TODO: I don't know the use-case for not setting an external ID, and perhaps it would be
@@ -56,7 +56,7 @@ it('can mark a model as synced without metadata using trait', function () {
     expect($model->getSyncMetadata())->toBe(null);
 });
 
-it('can mark a model as synced without overwriting metadata using trait', function () {
+it('markAsSynced without metadata does not overwrite existing metadata', function () {
     $model = TestModel::create(['name' => 'Test With Trait']);
 
     // Mark as synced and set some metadata

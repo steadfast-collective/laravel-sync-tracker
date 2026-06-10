@@ -25,41 +25,41 @@ beforeEach(function () {
     config(['sync-tracker.allow_empty_source' => false]);
 });
 
-it('throws when marking as synced without a source', function () {
+it('markAsSynced throws without a source', function () {
     $model = TestModel::create(['name' => 'Test Model']);
 
     $model->markAsSynced('ext-1');
 })->throws(EmptySourceException::class);
 
-it('throws when setting metadata without a source', function () {
+it('setSyncMetadata throws without a source', function () {
     $model = TestModel::create(['name' => 'Test Model']);
 
     $model->setSyncMetadata(['a' => 1]);
 })->throws(EmptySourceException::class);
 
-it('throws when merging metadata without a source', function () {
+it('mergeSyncMetadata throws without a source', function () {
     $model = TestModel::create(['name' => 'Test Model']);
 
     $model->mergeSyncMetadata(['a' => 1]);
 })->throws(EmptySourceException::class);
 
-it('throws when finding by external id without a source', function () {
+it('findByExternalId throws without a source', function () {
     TestModel::findByExternalId('ext-1');
 })->throws(EmptySourceException::class);
 
-it('throws when marking as synced via the facade without a source', function () {
+it('markAsSynced via the facade throws without a source', function () {
     $model = TestModel::create(['name' => 'Test Model']);
 
     SyncTracker::markAsSynced($model, 'ext-1');
 })->throws(EmptySourceException::class);
 
-it('throws when tracking via the facade without a source', function () {
+it('track via the facade throws without a source', function () {
     $model = TestModel::create(['name' => 'Test Model']);
 
     SyncTracker::track($model, ['external_id' => 'ext-1']);
 })->throws(EmptySourceException::class);
 
-it('still syncs normally when a source is provided', function () {
+it('sync APIs work normally when a source is provided', function () {
     $model = TestModel::create(['name' => 'Test Model']);
 
     $model->markAsSynced('ext-1', 'source-1', ['a' => 1]);
@@ -71,7 +71,7 @@ it('still syncs normally when a source is provided', function () {
     expect($model->syncTrackers()->where('source', 'source-1')->first()->metadata)->toBe(['b' => 2, 'c' => 3]);
 });
 
-it('still records lifecycle events on the sourceless lifecycle row', function () {
+it('lifecycle tracking is exempt and records on the sourceless row', function () {
     $model = TestModel::create(['name' => 'Test Model']);
 
     $model->update(['name' => 'Updated Name']);
@@ -79,7 +79,7 @@ it('still records lifecycle events on the sourceless lifecycle row', function ()
     expect($model->syncTrackers()->whereNull('source')->count())->toBe(1);
 });
 
-it('allows omitting the source when the option is enabled', function () {
+it('allow_empty_source = true permits omitting the source', function () {
     config(['sync-tracker.allow_empty_source' => true]);
 
     $model = TestModel::create(['name' => 'Test Model']);

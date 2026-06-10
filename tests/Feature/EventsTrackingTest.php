@@ -58,7 +58,7 @@ it('automatically tracks model deletion when using soft deletes', function () {
 |
 */
 
-it('stamps model updates on the lifecycle row, not the most recently synced source row', function () {
+it('updated event stamps the lifecycle row and leaves source rows untouched', function () {
     travelTo(Carbon::parse('2026-01-01 10:00:00'));
     $model = TestModel::create(['name' => 'Test Model']);
     $model->markAsSynced('ext-1', 'source-1');
@@ -75,7 +75,7 @@ it('stamps model updates on the lifecycle row, not the most recently synced sour
         ->toEqual(Carbon::parse('2026-01-01 10:00:00'));
 });
 
-it('stamps model deletion on the lifecycle row, not the most recently synced source row', function () {
+it('deleted event stamps the lifecycle row and leaves source rows untouched', function () {
     travelTo(Carbon::parse('2026-01-01 10:00:00'));
     $model = TestModel::create(['name' => 'Test Model']);
     $model->markAsSynced('ext-1', 'source-1');
