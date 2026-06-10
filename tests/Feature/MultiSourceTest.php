@@ -1,5 +1,6 @@
 <?php
 
+use Illuminate\Support\Carbon;
 use WizardingCode\FlowNetwork\SyncTracker\Facades\SyncTracker;
 use WizardingCode\FlowNetwork\SyncTracker\Tests\Models\TestModel;
 use WizardingCode\FlowNetwork\SyncTracker\Tests\TestCase;
@@ -84,6 +85,30 @@ it('returns null when the trackable no longer exists', function () {
     TestModel::query()->whereKey($model->id)->delete();
 
     expect(TestModel::findByExternalId('ext-1', 'source-1'))->toBeNull();
+});
+
+it('orders tracking rows with explicit null handling so lifecycle rows sort last on every database', function () {
+    // PostgreSQL sorts NULL first on a DESC order (MySQL/SQLite sort it
+    // last), so the ordering must spell the null check out rather than
+    // rely on plain `order by synced_at desc`. Creating the model also
+    // auto-creates a lifecycle tracking row with a NULL synced_at.
+    $model = TestModel::create(['name' => 'Test Model']);
+
+    Carbon::setTestNow('2026-01-01 10:00:00');
+    $model->markAsSynced('ext-old', 'source-old');
+
+    Carbon::setTestNow('2026-01-02 10:00:00');
+    $model->markAsSynced('ext-new', 'source-new');
+
+    Carbon::setTestNow();
+
+    // Most recently synced first, the lifecycle row always last.
+    expect($model->syncTrackers()->orderByMostRecentlySynced()->pluck('source')->all())
+        ->toBe(['source-new', 'source-old', null]);
+
+    // The single-source getters read from the top of that order.
+    expect($model->fresh()->getExternalId())->toBe('ext-new');
+    expect($model->fresh()->isSynced())->toBeTrue();
 });
 
 it('keeps metadata separate per source', function () {

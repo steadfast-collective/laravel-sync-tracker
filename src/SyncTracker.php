@@ -55,8 +55,7 @@ class SyncTracker
             'trackable_type' => get_class($model),
             'trackable_id' => $model->getKey(),
         ])
-            ->orderByDesc('synced_at')
-            ->orderByDesc('id')
+            ->orderByMostRecentlySynced()
             ->first();
     }
 

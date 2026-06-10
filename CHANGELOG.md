@@ -12,6 +12,7 @@ Added:
 Fixed:
 
 - Fixed support for tracking a model against multiple sources independently
+- Fixed sync tracking getters returning the never-synced lifecycle row instead of the most recently synced row on PostgreSQL (NULL `synced_at` sorts first on a descending order there)
 
 Breaking:
 

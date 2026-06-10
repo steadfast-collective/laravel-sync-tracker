@@ -15,6 +15,7 @@ class TestCase extends Orchestra
         parent::setUp();
 
         // Create a test table
+        Schema::dropIfExists('test_models');
         Schema::create('test_models', function (Blueprint $table) {
             $table->id();
             $table->string('name');
@@ -62,12 +63,28 @@ class TestCase extends Orchestra
      */
     protected function defineEnvironment($app)
     {
-        // Setup default database to use sqlite :memory:
+        // Setup the database based on the environment variables (Set in GitHub Actions)
+        // to test against different databases. Default to sqlite.
+        $driver = env('DB_CONNECTION', 'sqlite');
+
+        if ($driver === 'sqlite') {
+            $connection = [
+                'driver' => 'sqlite',
+                'database' => ':memory:',
+                'prefix' => '',
+            ];
+        } else {
+            $connection = [
+                'driver' => $driver,
+                'host' => env('DB_HOST'),
+                'port' => env('DB_PORT'),
+                'database' => env('DB_DATABASE'),
+                'username' => env('DB_USERNAME'),
+                'password' => env('DB_PASSWORD'),
+            ];
+        }
+
         $app['config']->set('database.default', 'testbench');
-        $app['config']->set('database.connections.testbench', [
-            'driver' => 'sqlite',
-            'database' => ':memory:',
-            'prefix' => '',
-        ]);
+        $app['config']->set('database.connections.testbench', $connection);
     }
 }

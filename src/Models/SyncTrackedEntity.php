@@ -2,6 +2,7 @@
 
 namespace WizardingCode\FlowNetwork\SyncTracker\Models;
 
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\MorphTo;
 
@@ -81,5 +82,24 @@ class SyncTrackedEntity extends Model
     public function trackable(): MorphTo
     {
         return $this->morphTo();
+    }
+
+    /**
+     * Order the query so the most recently synced row comes first.
+     *
+     * Rows with a NULL synced_at (auto-created lifecycle rows) must sort
+     * last on every database: PostgreSQL treats NULL as the largest value
+     * (NULLS FIRST on a DESC order), while MySQL and SQLite treat it as
+     * the smallest, so the null check has to be explicit.
+     *
+     * @param  Builder<self>  $query
+     * @return Builder<self>
+     */
+    public function scopeOrderByMostRecentlySynced(Builder $query): Builder
+    {
+        return $query
+            ->orderByRaw('case when synced_at is null then 1 else 0 end')
+            ->orderByDesc('synced_at')
+            ->orderByDesc('id');
     }
 }

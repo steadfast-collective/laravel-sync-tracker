@@ -72,8 +72,7 @@ trait HasSyncTracking
         // newest row) so the single-source getters return real sync data
         // rather than an auto-created lifecycle row.
         return $this->morphOne(SyncTrackedEntity::class, 'trackable')
-            ->orderByDesc('synced_at')
-            ->orderByDesc('id');
+            ->orderByMostRecentlySynced();
     }
 
     /**
