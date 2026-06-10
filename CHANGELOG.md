@@ -27,11 +27,12 @@ Fixed:
 
 Breaking:
 
+- Dropped support for Laravel 10 and PHP 8.1. The package now requires PHP 8.2+ and Laravel 11+. The `doctrine/dbal` dependency is no longer needed (Laravel 11+ alters columns natively) and has been removed.
 - Made all parameters of markSynced nullable to update SyncData timestamps without having to pass the data every time.
 - An empty source string now always throws an `EmptySourceException`. Omitting the source stays allowed by default but now targets the `'default'` source instead of a `NULL`-source row (see `allow_empty_source` above).
 - Model lifecycle events (created/updated/deleted) now record their timestamps on a dedicated lifecycle row under the `'_lifecycle'` sentinel source.
 - The `EntitySynced` event now fires when syncing via the trait as well, not only via the facade.
-- The `source` column is now `NOT NULL` and part of the unique index (one tracking row per model **per source**). Existing `NULL`-source rows must be deduplicated and backfilled manually **before** migrating, and Laravel 10 apps need doctrine/dbal for the column change — see [UPGRADE.md](UPGRADE.md). If you previously published the package migrations, re-publish them first so the new migration is copied into your app:
+- The `source` column is now `NOT NULL` and part of the unique index (one tracking row per model **per source**). Existing `NULL`-source rows must be deduplicated and backfilled manually **before** migrating — see [UPGRADE.md](UPGRADE.md). If you previously published the package migrations, re-publish them first so the new migration is copied into your app:
 
   ```bash
   php artisan vendor:publish --provider="WizardingCode\FlowNetwork\SyncTracker\SyncTrackerServiceProvider" --tag="migrations"

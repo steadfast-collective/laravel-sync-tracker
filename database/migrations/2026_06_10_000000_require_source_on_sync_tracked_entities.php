@@ -13,9 +13,7 @@ return new class extends Migration
      * SQL treats NULLs as distinct).
      *
      * Existing installs must clean up their NULL-source rows BEFORE running
-     * this migration (deduplicate, then backfill) — see UPGRADE.md. On
-     * Laravel 10 the column change additionally requires the doctrine/dbal
-     * package.
+     * this migration (deduplicate, then backfill) — see UPGRADE.md.
      *
      * @return void
      */

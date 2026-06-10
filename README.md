@@ -8,7 +8,7 @@
 [![Total Downloads](https://img.shields.io/packagist/dt/andreagroferreira/redis-stream.svg?style=flat-square)](https://packagist.org/packages/andreagroferreira/laravel-sync-tracker)
 [![MIT Licensed](https://img.shields.io/badge/license-MIT-brightgreen.svg?style=flat-square)](LICENSE.md)
 [![PHP Version Support](https://img.shields.io/packagist/php-v/andreagroferreira/redis-stream.svg?style=flat-square)](https://packagist.org/packages/andreagroferreira/laravel-sync-tracker)
-[![Laravel Version Support](https://img.shields.io/badge/Laravel-9.x%20|%2010.x%20|%2012.x-brightgreen.svg?style=flat-square)](https://packagist.org/packages/andreagroferreira/laravel-sync-tracker)
+[![Laravel Version Support](https://img.shields.io/badge/Laravel-11.x%20|%2012.x%20|%2013.x-brightgreen.svg?style=flat-square)](https://packagist.org/packages/andreagroferreira/laravel-sync-tracker)
 [![GitHub forks](https://img.shields.io/github/forks/andreagroferreira/laravel-redis-stream.svg?style=social&label=Fork&maxAge=2592000)](https://github.com/andreagroferreira/laravel-sync-tracker)
 [![GitHub stars](https://img.shields.io/github/stars/andreagroferreira/laravel-redis-stream.svg?style=social&label=Star&maxAge=2592000)](https://github.com/andreagroferreira/laravel-sync-tracker)
 

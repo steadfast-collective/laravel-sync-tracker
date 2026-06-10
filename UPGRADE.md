@@ -80,7 +80,6 @@ php artisan vendor:publish --provider="WizardingCode\FlowNetwork\SyncTracker\Syn
 php artisan migrate
 ```
 
-On Laravel 10 the `NOT NULL` column change requires doctrine/dbal (`composer require doctrine/dbal`); Laravel 11+ alters the column natively.
 
 ### API mapping
 
