@@ -1,0 +1,5 @@
+providers:
+  - WizardingCode\FlowNetwork\SyncTracker\SyncTrackerServiceProvider
+  - Laravel\Roster\RosterServiceProvider
+  - Laravel\Mcp\Server\McpServiceProvider
+  - Laravel\Boost\BoostServiceProvider

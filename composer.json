@@ -29,6 +29,7 @@
   },
   "require-dev": {
     "larastan/larastan": "^2.9|^3",
+    "laravel/boost": "^2.4",
     "laravel/pint": "^1.0",
     "mockery/mockery": "^1.5",
     "orchestra/testbench": "^9.6|^10.0|^11.0",
