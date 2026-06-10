@@ -13,6 +13,14 @@ return [
     // The table name used to store sync tracking information
     'table_name' => 'sync_tracked_entities',
 
+    // Whether a tracking call may omit the sync source. Disable to make
+    // markAsSynced, setSyncMetadata, mergeSyncMetadata and findByExternalId
+    // throw an EmptySourceException when no source is passed, preventing
+    // rows from being accidentally tracked without a source. Automatic
+    // lifecycle tracking (created/updated/deleted) always targets the
+    // sourceless lifecycle row and is not affected by this option.
+    'allow_empty_source' => true,
+
     // Default tracking options
     'default_tracking' => [
         // Whether to track creation timestamps by default

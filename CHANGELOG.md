@@ -8,6 +8,7 @@ Added:
 
 - Added `setSyncMetadata` and `mergeSyncMetadata` trait methods
 - Added findByExternalId method to models
+- Added `allow_empty_source` config option — disable it to make `markAsSynced`, `setSyncMetadata`, `mergeSyncMetadata` and `findByExternalId` throw an `EmptySourceException` when no source is passed (automatic lifecycle tracking is exempt)
 
 Fixed:
 

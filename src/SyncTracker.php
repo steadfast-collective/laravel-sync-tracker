@@ -3,6 +3,7 @@
 namespace WizardingCode\FlowNetwork\SyncTracker;
 
 use Illuminate\Database\Eloquent\Model;
+use WizardingCode\FlowNetwork\SyncTracker\Exceptions\EmptySourceException;
 use WizardingCode\FlowNetwork\SyncTracker\Models\SyncTrackedEntity;
 
 class SyncTracker
@@ -12,6 +13,8 @@ class SyncTracker
      */
     public function track(Model $model, array $attributes = []): SyncTrackedEntity
     {
+        EmptySourceException::throwIfDisallowed($attributes['source'] ?? null);
+
         return SyncTrackedEntity::updateOrCreate(
             [
                 'trackable_type' => get_class($model),
@@ -33,6 +36,8 @@ class SyncTracker
         ?string $source = null,
         array $metadata = []
     ): SyncTrackedEntity {
+        EmptySourceException::throwIfDisallowed($source);
+
         $syncInfo = $this->track($model, [
             'external_id' => $externalId,
             'source' => $source,

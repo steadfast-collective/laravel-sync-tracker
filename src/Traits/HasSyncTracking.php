@@ -4,6 +4,7 @@ namespace WizardingCode\FlowNetwork\SyncTracker\Traits;
 
 use Illuminate\Database\Eloquent\Relations\MorphMany;
 use Illuminate\Database\Eloquent\Relations\MorphOne;
+use WizardingCode\FlowNetwork\SyncTracker\Exceptions\EmptySourceException;
 use WizardingCode\FlowNetwork\SyncTracker\Models\SyncTrackedEntity;
 
 trait HasSyncTracking
@@ -49,6 +50,8 @@ trait HasSyncTracking
 
     public static function findByExternalId(string $externalId, ?string $source = null)
     {
+        EmptySourceException::throwIfDisallowed($source);
+
         $tracking = SyncTrackedEntity::where([
             'external_id' => $externalId,
             'source' => $source,
@@ -94,6 +97,8 @@ trait HasSyncTracking
      */
     public function markAsSynced(?string $externalId = null, ?string $source = null, ?array $metadata = null): SyncTrackedEntity
     {
+        EmptySourceException::throwIfDisallowed($source);
+
         throw_if(
             $this->relationLoaded('syncTracking') && $this->syncTracking->isDirty(),
             'Please save your syncTracking model before using markAsSynced to avoid data loss'
@@ -129,6 +134,8 @@ trait HasSyncTracking
      */
     public function setSyncMetadata(array $metadata, ?string $source = null): SyncTrackedEntity
     {
+        EmptySourceException::throwIfDisallowed($source);
+
         throw_if(
             $this->relationLoaded('syncTracking') && $this->syncTracking->isDirty(),
             'Please save your syncTracking model before setting meta data to avoid data loss'
@@ -152,6 +159,8 @@ trait HasSyncTracking
      */
     public function mergeSyncMetadata(array $metadata, ?string $source = null): SyncTrackedEntity
     {
+        EmptySourceException::throwIfDisallowed($source);
+
         return $this->setSyncMetadata(
             [
                 ...($this->getSyncMetadata() ?? []),
