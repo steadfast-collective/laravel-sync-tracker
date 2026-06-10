@@ -65,7 +65,7 @@ class TestCase extends Orchestra
     {
         // Setup the database based on the environment variables (Set in GitHub Actions)
         // to test against different databases. Default to sqlite.
-        $driver = env('DB_CONNECTION', 'sqlite');
+        $driver = env('DB_CONNECTION', 'sqlite'); // @phpstan-ignore-line
 
         if ($driver === 'sqlite') {
             $connection = [
@@ -76,11 +76,11 @@ class TestCase extends Orchestra
         } else {
             $connection = [
                 'driver' => $driver,
-                'host' => env('DB_HOST'),
-                'port' => env('DB_PORT'),
-                'database' => env('DB_DATABASE'),
-                'username' => env('DB_USERNAME'),
-                'password' => env('DB_PASSWORD'),
+                'host' => env('DB_HOST'), // @phpstan-ignore-line
+                'port' => env('DB_PORT'), // @phpstan-ignore-line
+                'database' => env('DB_DATABASE'), // @phpstan-ignore-line
+                'username' => env('DB_USERNAME'), // @phpstan-ignore-line
+                'password' => env('DB_PASSWORD'), // @phpstan-ignore-line
             ];
         }
 
