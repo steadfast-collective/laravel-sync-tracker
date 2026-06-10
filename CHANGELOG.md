@@ -17,6 +17,7 @@ Fixed:
 Breaking:
 
 - Made all parameters of markSynced nullable to update SyncData timestamps without having to pass the data every time.
+- Model lifecycle events (created/updated/deleted) now record their timestamps on a sourceless lifecycle row only. If you relied on these stamps appearing on a source's tracking row (e.g. if any of your `source` fields are not null`) you will need to migrate them by creating a new SyncTrackedEntity entry without a source for each item and copying the timestamp fields.
 - The unique index on the sync tracking table now includes `source` (one tracking row per model **per source**). If you previously published the package migrations, re-publish them first so the new migration is copied into your app:
 
   ```bash

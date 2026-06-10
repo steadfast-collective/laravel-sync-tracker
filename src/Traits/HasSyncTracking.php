@@ -15,10 +15,14 @@ trait HasSyncTracking
      */
     protected static function bootHasSyncTracking()
     {
+        // Lifecycle events are recorded on the sourceless lifecycle row.
+        // `source` must be part of the match keys: without it the ordered
+        // syncTracking relation resolves to the most recently synced source
+        // row and the stamp would corrupt that source's sync record.
         static::created(function ($model) {
             if (config('sync-tracker.default_tracking.track_created', true)) {
                 $model->syncTracking()->updateOrCreate(
-                    ['trackable_type' => get_class($model), 'trackable_id' => $model->getKey()],
+                    ['trackable_type' => get_class($model), 'trackable_id' => $model->getKey(), 'source' => null],
                     ['created_at' => now()]
                 );
             }
@@ -27,7 +31,7 @@ trait HasSyncTracking
         static::updated(function ($model) {
             if (config('sync-tracker.default_tracking.track_updated', true)) {
                 $model->syncTracking()->updateOrCreate(
-                    ['trackable_type' => get_class($model), 'trackable_id' => $model->getKey()],
+                    ['trackable_type' => get_class($model), 'trackable_id' => $model->getKey(), 'source' => null],
                     ['updated_at' => now()]
                 );
             }
@@ -36,7 +40,7 @@ trait HasSyncTracking
         static::deleted(function ($model) {
             if (config('sync-tracker.default_tracking.track_deleted', true)) {
                 $model->syncTracking()->updateOrCreate(
-                    ['trackable_type' => get_class($model), 'trackable_id' => $model->getKey()],
+                    ['trackable_type' => get_class($model), 'trackable_id' => $model->getKey(), 'source' => null],
                     ['deleted_at' => now()]
                 );
             }
