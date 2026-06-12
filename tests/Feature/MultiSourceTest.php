@@ -24,22 +24,22 @@ uses(TestCase::class);
 it('markAsSynced tracks each source as its own row', function () {
     $model = TestModel::create(['name' => 'Test Model']);
 
-    $model->markAsSynced('ext-1', 'source-1');
-    $model->markAsSynced('ext-2', 'source-2');
+    $model->syncData('source-1')->markAsSynced('ext-1');
+    $model->syncData('source-2')->markAsSynced('ext-2');
 
     expect($model->syncTrackers()->withoutLifecycle()->count())->toBe(2);
-    expect($model->getExternalIdFromSource('source-1'))->toBe('ext-1');
-    expect($model->getExternalIdFromSource('source-2'))->toBe('ext-2');
+    expect($model->syncData('source-1')->external_id)->toBe('ext-1');
+    expect($model->syncData('source-2')->external_id)->toBe('ext-2');
 });
 
 it('markAsSynced updates the existing row when re-syncing the same source', function () {
     $model = TestModel::create(['name' => 'Test Model']);
 
-    $model->markAsSynced('ext-1', 'source-1');
-    $model->markAsSynced('ext-1-updated', 'source-1');
+    $model->syncData('source-1')->markAsSynced('ext-1');
+    $model->syncData('source-1')->markAsSynced('ext-1-updated');
 
     expect($model->syncTrackers()->where('source', 'source-1')->count())->toBe(1);
-    expect($model->getExternalIdFromSource('source-1'))->toBe('ext-1-updated');
+    expect($model->syncData('source-1')->external_id)->toBe('ext-1-updated');
 });
 
 it('markAsSynced via the facade tracks each source as its own row', function () {
@@ -54,8 +54,8 @@ it('markAsSynced via the facade tracks each source as its own row', function () 
 it('findByExternalId resolves the model matching the source', function (string $externalId, string $source, ?string $expected) {
     $a = TestModel::create(['name' => 'A']);
     $b = TestModel::create(['name' => 'B']);
-    $a->markAsSynced('shared-id', 'source-1');
-    $b->markAsSynced('shared-id', 'source-2');
+    $a->syncData('source-1')->markAsSynced('shared-id');
+    $b->syncData('source-2')->markAsSynced('shared-id');
 
     $found = TestModel::findByExternalId($externalId, $source);
 
@@ -73,7 +73,7 @@ it('findByExternalId resolves the model matching the source', function (string $
 
 it('findByExternalId returns null when the tracked model row is gone', function () {
     $model = TestModel::create(['name' => 'Test Model']);
-    $model->markAsSynced('ext-1', 'source-1');
+    $model->syncData('source-1')->markAsSynced('ext-1');
 
     // Hard-delete the trackable via the query builder so no model events fire,
     // leaving the tracking row orphaned.
@@ -90,10 +90,10 @@ it('orderByMostRecentlySynced sorts the lifecycle row last', function () {
     $model = TestModel::create(['name' => 'Test Model']);
 
     Carbon::setTestNow('2026-01-01 10:00:00');
-    $model->markAsSynced('ext-old', 'source-old');
+    $model->syncData('source-old')->markAsSynced('ext-old');
 
     Carbon::setTestNow('2026-01-02 10:00:00');
-    $model->markAsSynced('ext-new', 'source-new');
+    $model->syncData('source-new')->markAsSynced('ext-new');
 
     Carbon::setTestNow();
 
@@ -101,9 +101,8 @@ it('orderByMostRecentlySynced sorts the lifecycle row last', function () {
     expect($model->syncTrackers()->orderByMostRecentlySynced()->pluck('source')->all())
         ->toBe(['source-new', 'source-old', SyncTrackedEntity::LIFECYCLE_SOURCE]);
 
-    // The deprecated single-source getters read from the top of that order.
-    expect($model->fresh()->getExternalId())->toBe('ext-new');
-    expect($model->fresh()->isSynced())->toBeTrue();
+    expect($model->fresh()->syncData('source-new')->external_id)->toBe('ext-new');
+    expect($model->fresh()->syncData('source-new')->isSynced())->toBeTrue();
 
     // The facade's sourceless lookup reads the same order, excluding the
     // lifecycle row.
@@ -113,8 +112,8 @@ it('orderByMostRecentlySynced sorts the lifecycle row last', function () {
 it('setSyncMetadata keeps metadata separate per source', function () {
     $model = TestModel::create(['name' => 'Test Model']);
 
-    $model->setSyncMetadata(['k' => 'val-1'], 'source-1');
-    $model->setSyncMetadata(['k' => 'val-2'], 'source-2');
+    $model->syncData('source-1')->setSyncMetadata(['k' => 'val-1']);
+    $model->syncData('source-2')->setSyncMetadata(['k' => 'val-2']);
 
     expect($model->syncTrackers()->where('source', 'source-1')->first()->metadata)->toBe(['k' => 'val-1']);
     expect($model->syncTrackers()->where('source', 'source-2')->first()->metadata)->toBe(['k' => 'val-2']);
@@ -123,10 +122,10 @@ it('setSyncMetadata keeps metadata separate per source', function () {
 it('mergeSyncMetadata merges into the requested source only', function () {
     $model = TestModel::create(['name' => 'Test Model']);
 
-    $model->setSyncMetadata(['a' => 1], 'source-1');
-    $model->setSyncMetadata(['b' => 2], 'source-2');
+    $model->syncData('source-1')->setSyncMetadata(['a' => 1]);
+    $model->syncData('source-2')->setSyncMetadata(['b' => 2]);
 
-    $model->mergeSyncMetadata(['c' => 3], 'source-2');
+    $model->syncData('source-2')->mergeSyncMetadata(['c' => 3]);
 
     expect($model->syncTrackers()->where('source', 'source-2')->first()->metadata)->toBe(['b' => 2, 'c' => 3]);
     expect($model->syncTrackers()->where('source', 'source-1')->first()->metadata)->toBe(['a' => 1]);
@@ -136,14 +135,14 @@ it('mergeSyncMetadata targets the requested source even when another source sync
     $model = TestModel::create(['name' => 'Test Model']);
 
     Carbon::setTestNow('2026-01-01 10:00:00');
-    $model->markAsSynced('ext-1', 'source-1', ['a' => 1]);
+    $model->syncData('source-1')->markAsSynced('ext-1', ['a' => 1]);
 
     Carbon::setTestNow('2026-01-02 10:00:00');
-    $model->markAsSynced('ext-2', 'source-2', ['b' => 2]);
+    $model->syncData('source-2')->markAsSynced('ext-2', ['b' => 2]);
 
     Carbon::setTestNow();
 
-    $model->mergeSyncMetadata(['c' => 3], 'source-1');
+    $model->syncData('source-1')->mergeSyncMetadata(['c' => 3]);
 
     // source-1 keeps its own metadata plus the merged key...
     expect($model->syncTrackers()->where('source', 'source-1')->first()->metadata)->toBe(['a' => 1, 'c' => 3]);
@@ -155,9 +154,9 @@ it('mergeSyncMetadata targets the requested source even when another source sync
 it('mergeSyncMetadata creates the row for a previously unsynced source', function () {
     $model = TestModel::create(['name' => 'Test Model']);
 
-    $model->markAsSynced('ext-1', 'source-1', ['a' => 1]);
+    $model->syncData('source-1')->markAsSynced('ext-1', ['a' => 1]);
 
-    $model->mergeSyncMetadata(['fresh' => true], 'source-2');
+    $model->syncData('source-2')->mergeSyncMetadata(['fresh' => true]);
 
     // Only the merged keys — nothing inherited from another source's row.
     expect($model->syncTrackers()->where('source', 'source-2')->first()->metadata)->toBe(['fresh' => true]);

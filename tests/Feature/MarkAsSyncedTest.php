@@ -17,26 +17,14 @@ it('can mark a model as synced using facade', function () {
     expect(SyncTracker::getSyncInfo($model)->source)->toBe('api');
 });
 
-it('can mark a model as synced using the deprecated trait methods', function () {
-    $model = TestModel::create(['name' => 'Test With Trait']);
-
-    $model->markAsSynced('ext-xyz', 'erp', ['foo' => 'bar']);
-
-    // The deprecated any-source getters read from the most recently synced row.
-    expect($model->isSynced())->toBeTrue();
-    expect($model->getExternalId())->toBe('ext-xyz');
-    expect($model->getSyncSource())->toBe('erp');
-    expect($model->getSyncMetadata())->toBe(['foo' => 'bar']);
-});
-
 it('markAsSynced with only a source refreshes the sync without clearing existing data', function () {
     $model = TestModel::create(['name' => 'Test With Trait']);
 
     // Mark as synced with all the details (id, source, metadata)
-    $model->markAsSynced('ext-xyz', 'erp', ['foo' => 'bar']);
+    $model->syncData('erp')->markAsSynced('ext-xyz', ['foo' => 'bar']);
 
     // Mark as synced to update the timestamps, but not the related data
-    $model->markAsSynced(null, 'erp');
+    $model->syncData('erp')->markAsSynced();
 
     // Check the data is still present and correct
     $entity = $model->syncData('erp');
@@ -49,11 +37,11 @@ it('markAsSynced without metadata does not overwrite existing metadata', functio
     $model = TestModel::create(['name' => 'Test With Trait']);
 
     // Mark as synced and set some metadata
-    $model->markAsSynced('ext-xyz', 'erp', ['foo' => 'bar']);
+    $model->syncData('erp')->markAsSynced('ext-xyz', ['foo' => 'bar']);
     expect($model->syncData('erp')->metadata)->toBe(['foo' => 'bar']);
 
     // Mark as synced again without setting it
-    $model->markAsSynced('ext-xyz', 'erp');
+    $model->syncData('erp')->markAsSynced('ext-xyz');
 
     // Check the metadata was not changed
     expect($model->syncData('erp')->metadata)->toBe(['foo' => 'bar']);

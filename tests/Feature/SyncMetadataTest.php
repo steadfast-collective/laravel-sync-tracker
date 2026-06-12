@@ -44,16 +44,4 @@ class SyncMetadataTest extends TestCase
             'goodbye' => 'universe',
         ], $model->syncData('erp')->metadata);
     }
-
-    #[Test]
-    public function deprecated_metadata_methods_delegate_to_the_source_scoped_entity()
-    {
-        $model = TestModel::create(['name' => 'Test Model']);
-
-        $model->setSyncMetadata(['foo' => 'bar'], 'erp');
-        $model->mergeSyncMetadata(['baz' => 'qux'], 'erp');
-
-        $this->assertEquals(['foo' => 'bar', 'baz' => 'qux'], $model->syncData('erp')->metadata);
-        $this->assertEquals(['foo' => 'bar', 'baz' => 'qux'], $model->getSyncMetadata());
-    }
 }

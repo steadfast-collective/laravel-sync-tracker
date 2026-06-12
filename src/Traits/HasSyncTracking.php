@@ -8,8 +8,6 @@ use WizardingCode\FlowNetwork\SyncTracker\Models\SyncTrackedEntity;
 
 trait HasSyncTracking
 {
-    use DeprecatedSyncTrackerMethods;
-
     /**
      * Boot the trait.
      *

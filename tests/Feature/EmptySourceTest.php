@@ -34,19 +34,19 @@ describe('how allow_empty_source is handled when it is false', function () {
     it('markAsSynced throws without a source', function () {
         $model = TestModel::create(['name' => 'Test Model']);
 
-        $model->markAsSynced('ext-1');
+        $model->syncData()->markAsSynced('ext-1');
     })->throws(EmptySourceException::class);
 
     it('setSyncMetadata throws without a source', function () {
         $model = TestModel::create(['name' => 'Test Model']);
 
-        $model->setSyncMetadata(['a' => 1]);
+        $model->syncData()->setSyncMetadata(['a' => 1]);
     })->throws(EmptySourceException::class);
 
     it('mergeSyncMetadata throws without a source', function () {
         $model = TestModel::create(['name' => 'Test Model']);
 
-        $model->mergeSyncMetadata(['a' => 1]);
+        $model->syncData()->mergeSyncMetadata(['a' => 1]);
     })->throws(EmptySourceException::class);
 
     it('findByExternalId throws without a source', function () {
@@ -68,9 +68,9 @@ describe('how allow_empty_source is handled when it is false', function () {
     it('sync APIs work normally when a source is provided', function () {
         $model = TestModel::create(['name' => 'Test Model']);
 
-        $model->markAsSynced('ext-1', 'source-1', ['a' => 1]);
-        $model->setSyncMetadata(['b' => 2], 'source-1');
-        $model->mergeSyncMetadata(['c' => 3], 'source-1');
+        $model->syncData('source-1')->markAsSynced('ext-1', ['a' => 1]);
+        $model->syncData('source-1')->setSyncMetadata(['b' => 2]);
+        $model->syncData('source-1')->mergeSyncMetadata(['c' => 3]);
 
         expect($model->syncData('source-1')->external_id)->toBe('ext-1');
         expect(TestModel::findByExternalId('ext-1', 'source-1')?->id)->toBe($model->id);
@@ -97,7 +97,7 @@ describe('how allow_empty_source is handled when it is true (the default)', func
     it('markAsSynced without a source records on the default source row', function () {
         $model = TestModel::create(['name' => 'Test Model']);
 
-        $model->markAsSynced('ext-1');
+        $model->syncData()->markAsSynced('ext-1');
 
         $entity = $model->syncData(SyncTrackedEntity::DEFAULT_SOURCE);
         expect($entity->isSynced())->toBeTrue();
@@ -110,7 +110,7 @@ describe('how allow_empty_source is handled when it is true (the default)', func
     it('findByExternalId without a source matches the default source row', function () {
         $model = TestModel::create(['name' => 'Test Model']);
 
-        $model->markAsSynced('no-src');
+        $model->syncData()->markAsSynced('no-src');
 
         expect(TestModel::findByExternalId('no-src')?->id)->toBe($model->id);
     });
@@ -131,7 +131,7 @@ describe('empty source strings', function () {
     it('markAsSynced always throws for an empty source string', function () {
         $model = TestModel::create(['name' => 'Test Model']);
 
-        $model->markAsSynced('ext-1', '');
+        $model->syncData('')->markAsSynced('ext-1');
     })->throws(EmptySourceException::class);
 
     it('findByExternalId always throws for an empty source string', function () {
@@ -141,6 +141,6 @@ describe('empty source strings', function () {
     it('markAsSynced always throws for a whitespace-only source string', function () {
         $model = TestModel::create(['name' => 'Test Model']);
 
-        $model->markAsSynced('ext-1', '  ');
+        $model->syncData('  ')->markAsSynced('ext-1');
     })->throws(EmptySourceException::class);
 });

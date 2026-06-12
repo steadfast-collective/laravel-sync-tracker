@@ -13,9 +13,9 @@ Added:
 - Added `SyncTrackedEntity::for($model, $source)`, the `withoutLifecycle()` scope, `isLifecycle()`, and the `SyncTrackedEntity::LIFECYCLE_SOURCE` constant
 - Added an optional `$source` parameter to `SyncTracker::getSyncInfo()` and `SyncTracker::isSynced()`
 
-Deprecated:
+Removed:
 
-- Deprecated the old trait API (`markAsSynced`, `setSyncMetadata`, `mergeSyncMetadata`, `getExternalIdFromSource`, `getExternalId`, `getSyncSource`, `getSyncMetadata`, `isSynced` and the `syncTracking` relation). All of it keeps working via thin delegates in `DeprecatedSyncTrackerMethods`.
+- Removed the old trait API (`markAsSynced`, `setSyncMetadata`, `mergeSyncMetadata`, `getExternalIdFromSource`, `getExternalId`, `getSyncSource`, `getSyncMetadata`, `isSynced` and the `syncTracking` relation). Deprecated versions can be poly-filled with the trait: `WizardingCode\FlowNetwork\SyncTracker\Traits\DeprecatedSyncTrackerMethods`.
 
 Fixed:
 

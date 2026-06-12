@@ -14,7 +14,7 @@ $model->syncData('shopify')->isSynced();
 $model->syncData('shopify')->mergeSyncMetadata(['pushed_at' => now()]);
 ```
 
-The old methods still work as `@deprecated` delegates (see the mapping table below).
+The old methods can be polyfilled by adding the `WizardingCode\FlowNetwork\SyncTracker\Traits\DeprecatedSyncTrackerMethods` trait.
 
 ### Breaking changes
 
