@@ -11,6 +11,7 @@ Added:
 - Added `allow_empty_source` config option — when enabled (the default) calls that omit the source resolve to the `'default'` source; disable it to make `syncData`, `markAsSynced`, `setSyncMetadata`, `mergeSyncMetadata` and `findByExternalId` throw an `EmptySourceException` when no source is passed.
 - Added the source-scoped sync API: `$model->syncData($source)` returns the `SyncTrackedEntity` for that source, which now carries `markAsSynced`, `setSyncMetadata`, `mergeSyncMetadata` and `isSynced`. See [UPGRADE.md](UPGRADE.md) for the migration mapping.
 - Added `SyncTrackedEntity::for($model, $source)`, the `withoutLifecycle()` scope, `isLifecycle()`, and the `SyncTrackedEntity::LIFECYCLE_SOURCE` constant
+- Added the `hasExternalId(?string $source = null)` model scope — to find models which have been synced to a specific (or any) source.
 - Added an optional `$source` parameter to `SyncTracker::getSyncInfo()` and `SyncTracker::isSynced()`
 
 Removed:

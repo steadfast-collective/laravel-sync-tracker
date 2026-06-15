@@ -330,7 +330,17 @@ public function handleExternalUpdate(Request $request)
 
 ### Query Scopes for Sync Status
 
-Define query scopes on your models for easy filtering:
+The trait provides a `hasExternalId` scope out of the box — it filters to models that have been synced to an integration (a tracker row carrying a non-null `external_id`, which also excludes the auto-created lifecycle rows). Pass a source to require a sync to that specific one:
+
+```php
+// Synced to any source
+Product::hasExternalId()->get();
+
+// Synced specifically to the 'shopify' source
+Product::hasExternalId('shopify')->get();
+```
+
+You can also define your own scopes for finer-grained filtering:
 
 ```php
 use WizardingCode\FlowNetwork\SyncTracker\Traits\HasSyncTracking;

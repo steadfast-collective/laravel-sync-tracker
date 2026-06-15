@@ -2,6 +2,7 @@
 
 namespace WizardingCode\FlowNetwork\SyncTracker\Traits;
 
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Relations\MorphMany;
 use WizardingCode\FlowNetwork\SyncTracker\Exceptions\EmptySourceException;
 use WizardingCode\FlowNetwork\SyncTracker\Models\SyncTrackedEntity;
@@ -91,5 +92,27 @@ trait HasSyncTracking
     public function syncTrackers(): MorphMany
     {
         return $this->morphMany(SyncTrackedEntity::class, 'trackable');
+    }
+
+    /**
+     * Scope to models which have been synced to an integration — i.e. have a
+     * tracker row carrying an external_id. Pass a source to require a sync to
+     * that specific source; without one, a sync to any source counts.
+     *
+     * The external_id check also excludes the auto-created '_lifecycle' rows,
+     * since those never carry one.
+     *
+     * @param  Builder<static>  $query
+     * @return Builder<static>
+     */
+    public function scopeHasExternalId(Builder $query, ?string $source = null): Builder
+    {
+        return $query->whereHas('syncTrackers', function (Builder $query) use ($source): void {
+            $query->whereNotNull('external_id');
+
+            if ($source !== null) {
+                $query->where('source', $source);
+            }
+        });
     }
 }
