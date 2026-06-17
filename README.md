@@ -21,7 +21,7 @@ A few misc notes about the changes or observations which might be useful:
 
  - Most of these changes will be made to Trait usage because that's how we're using it. PRs with tests for the Facade options are welcome.
  - We are separating the sync metadata from the main sync data. So you can call `markAsSynced` without updating the meta, and introducing options to merge instead of totally overwriting the metadata.
- - The sync API is source-scoped: `$model->syncData($source)` returns the tracking entity for one source, and all reads/writes happen on it. All methods should now go via `->syncData()` and the previous methods are deprecated (and still buggy with multiple sources)
+ - The sync API is source-scoped: `$model->syncData($source)` returns the tracking entity for one source, and all reads/writes happen on it. All methods should now go via `->syncData()` and the previous methods are deprecated delegates for backwards compatibility.
 
 ## Features
 
