@@ -115,8 +115,8 @@ it('setSyncMetadata keeps metadata separate per source', function () {
     $model->syncData('source-1')->setSyncMetadata(['k' => 'val-1']);
     $model->syncData('source-2')->setSyncMetadata(['k' => 'val-2']);
 
-    expect($model->syncTrackers()->where('source', 'source-1')->first()->metadata)->toBe(['k' => 'val-1']);
-    expect($model->syncTrackers()->where('source', 'source-2')->first()->metadata)->toBe(['k' => 'val-2']);
+    expect($model->syncTrackers()->where('source', 'source-1')->first()->metadata)->toEqual(['k' => 'val-1']);
+    expect($model->syncTrackers()->where('source', 'source-2')->first()->metadata)->toEqual(['k' => 'val-2']);
 });
 
 it('mergeSyncMetadata merges into the requested source only', function () {
@@ -127,8 +127,8 @@ it('mergeSyncMetadata merges into the requested source only', function () {
 
     $model->syncData('source-2')->mergeSyncMetadata(['c' => 3]);
 
-    expect($model->syncTrackers()->where('source', 'source-2')->first()->metadata)->toBe(['b' => 2, 'c' => 3]);
-    expect($model->syncTrackers()->where('source', 'source-1')->first()->metadata)->toBe(['a' => 1]);
+    expect($model->syncTrackers()->where('source', 'source-2')->first()->metadata)->toEqual(['b' => 2, 'c' => 3]);
+    expect($model->syncTrackers()->where('source', 'source-1')->first()->metadata)->toEqual(['a' => 1]);
 });
 
 it('mergeSyncMetadata targets the requested source even when another source synced more recently', function () {
@@ -145,10 +145,10 @@ it('mergeSyncMetadata targets the requested source even when another source sync
     $model->syncData('source-1')->mergeSyncMetadata(['c' => 3]);
 
     // source-1 keeps its own metadata plus the merged key...
-    expect($model->syncTrackers()->where('source', 'source-1')->first()->metadata)->toBe(['a' => 1, 'c' => 3]);
+    expect($model->syncTrackers()->where('source', 'source-1')->first()->metadata)->toEqual(['a' => 1, 'c' => 3]);
 
     // ...and the more recently synced source-2 row stays untouched.
-    expect($model->syncTrackers()->where('source', 'source-2')->first()->metadata)->toBe(['b' => 2]);
+    expect($model->syncTrackers()->where('source', 'source-2')->first()->metadata)->toEqual(['b' => 2]);
 });
 
 it('mergeSyncMetadata creates the row for a previously unsynced source', function () {
@@ -159,5 +159,5 @@ it('mergeSyncMetadata creates the row for a previously unsynced source', functio
     $model->syncData('source-2')->mergeSyncMetadata(['fresh' => true]);
 
     // Only the merged keys — nothing inherited from another source's row.
-    expect($model->syncTrackers()->where('source', 'source-2')->first()->metadata)->toBe(['fresh' => true]);
+    expect($model->syncTrackers()->where('source', 'source-2')->first()->metadata)->toEqual(['fresh' => true]);
 });

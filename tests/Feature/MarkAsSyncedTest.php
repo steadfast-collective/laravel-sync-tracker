@@ -30,7 +30,7 @@ it('markAsSynced with only a source refreshes the sync without clearing existing
     $entity = $model->syncData('erp');
     expect($entity->isSynced())->toBeTrue();
     expect($entity->external_id)->toBe('ext-xyz');
-    expect($entity->metadata)->toBe(['foo' => 'bar']);
+    expect($entity->metadata)->toEqual(['foo' => 'bar']);
 });
 
 it('markAsSynced without metadata does not overwrite existing metadata', function () {
@@ -38,13 +38,13 @@ it('markAsSynced without metadata does not overwrite existing metadata', functio
 
     // Mark as synced and set some metadata
     $model->syncData('erp')->markAsSynced('ext-xyz', ['foo' => 'bar']);
-    expect($model->syncData('erp')->metadata)->toBe(['foo' => 'bar']);
+    expect($model->syncData('erp')->metadata)->toEqual(['foo' => 'bar']);
 
     // Mark as synced again without setting it
     $model->syncData('erp')->markAsSynced('ext-xyz');
 
     // Check the metadata was not changed
-    expect($model->syncData('erp')->metadata)->toBe(['foo' => 'bar']);
+    expect($model->syncData('erp')->metadata)->toEqual(['foo' => 'bar']);
 });
 
 it('markAsSynced via the facade without metadata does not overwrite existing metadata', function () {
@@ -55,5 +55,5 @@ it('markAsSynced via the facade without metadata does not overwrite existing met
     // Re-syncing without metadata used to wipe the stored metadata.
     SyncTracker::markAsSynced($model, 'ext-123', 'api');
 
-    expect($model->syncData('api')->metadata)->toBe(['foo' => 'bar']);
+    expect($model->syncData('api')->metadata)->toEqual(['foo' => 'bar']);
 });

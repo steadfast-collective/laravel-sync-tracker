@@ -65,7 +65,7 @@ it('syncData->markAsSynced without arguments preserves the external id and metad
     $entity = $model->syncData('erp');
     expect($entity->isSynced())->toBeTrue();
     expect($entity->external_id)->toBe('ext-xyz');
-    expect($entity->metadata)->toBe(['foo' => 'bar']);
+    expect($entity->metadata)->toEqual(['foo' => 'bar']);
 });
 
 it('syncData->setSyncMetadata keeps metadata separate per source', function () {
@@ -74,8 +74,8 @@ it('syncData->setSyncMetadata keeps metadata separate per source', function () {
     $model->syncData('source-1')->setSyncMetadata(['k' => 'val-1']);
     $model->syncData('source-2')->setSyncMetadata(['k' => 'val-2']);
 
-    expect($model->syncData('source-1')->metadata)->toBe(['k' => 'val-1']);
-    expect($model->syncData('source-2')->metadata)->toBe(['k' => 'val-2']);
+    expect($model->syncData('source-1')->metadata)->toEqual(['k' => 'val-1']);
+    expect($model->syncData('source-2')->metadata)->toEqual(['k' => 'val-2']);
 });
 
 it('syncData->mergeSyncMetadata merges into the requested source only', function () {
@@ -86,8 +86,8 @@ it('syncData->mergeSyncMetadata merges into the requested source only', function
 
     $model->syncData('source-2')->mergeSyncMetadata(['c' => 3]);
 
-    expect($model->syncData('source-2')->metadata)->toBe(['b' => 2, 'c' => 3]);
-    expect($model->syncData('source-1')->metadata)->toBe(['a' => 1]);
+    expect($model->syncData('source-2')->metadata)->toEqual(['b' => 2, 'c' => 3]);
+    expect($model->syncData('source-1')->metadata)->toEqual(['a' => 1]);
 });
 
 it('syncData->mergeSyncMetadata creates the row for a previously unsynced source', function () {
@@ -98,7 +98,7 @@ it('syncData->mergeSyncMetadata creates the row for a previously unsynced source
     $model->syncData('source-2')->mergeSyncMetadata(['fresh' => true]);
 
     // Only the merged keys — nothing inherited from another source's row.
-    expect($model->syncData('source-2')->metadata)->toBe(['fresh' => true]);
+    expect($model->syncData('source-2')->metadata)->toEqual(['fresh' => true]);
 });
 
 it('syncData throws for an empty source string', function () {

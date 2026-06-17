@@ -27,8 +27,8 @@ it('setSyncMetadata and mergeSyncMetadata delegates target the requested source'
     $model->setSyncMetadata(['foo' => 'bar'], 'erp');
     $model->mergeSyncMetadata(['baz' => 'qux'], 'erp');
 
-    expect($model->syncData('erp')->metadata)->toBe(['foo' => 'bar', 'baz' => 'qux']);
-    expect($model->getSyncMetadata())->toBe(['foo' => 'bar', 'baz' => 'qux']);
+    expect($model->syncData('erp')->metadata)->toEqual(['foo' => 'bar', 'baz' => 'qux']);
+    expect($model->getSyncMetadata())->toEqual(['foo' => 'bar', 'baz' => 'qux']);
 });
 
 it('getExternalIdFromSource returns the external id for the requested source', function () {

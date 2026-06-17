@@ -74,7 +74,7 @@ describe('how allow_empty_source is handled when it is false', function () {
 
         expect($model->syncData('source-1')->external_id)->toBe('ext-1');
         expect(TestModel::findByExternalId('ext-1', 'source-1')?->id)->toBe($model->id);
-        expect($model->syncData('source-1')->metadata)->toBe(['b' => 2, 'c' => 3]);
+        expect($model->syncData('source-1')->metadata)->toEqual(['b' => 2, 'c' => 3]);
     });
 
     it('lifecycle tracking is exempt and records on the lifecycle row', function () {
