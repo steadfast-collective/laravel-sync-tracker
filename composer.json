@@ -2,7 +2,7 @@
   "name": "andreagroferreira/laravel-sync-tracker",
   "description": "A Laravel package for tracking entity synchronization status between systems",
   "type": "library",
-  "version": "1.0.0",
+  "version": "2.0.0",
   "keywords": ["laravel", "sync", "tracker", "database", "orm"],
   "license": "MIT",
   "authors": [
