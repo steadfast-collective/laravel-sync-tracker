@@ -15,7 +15,7 @@ class SyncFailed
     /**
      * The model that failed to sync.
      *
-     * @var \Illuminate\Database\Eloquent\Model
+     * @var Model
      */
     public $model;
 
@@ -29,7 +29,7 @@ class SyncFailed
     /**
      * The exception that caused the failure.
      *
-     * @var \Exception|null
+     * @var Exception|null
      */
     public $exception;
 

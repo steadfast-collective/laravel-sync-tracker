@@ -15,14 +15,14 @@ class EntitySynced
     /**
      * The model that was synced.
      *
-     * @var \Illuminate\Database\Eloquent\Model
+     * @var Model
      */
     public $model;
 
     /**
      * The sync tracking information.
      *
-     * @var \WizardingCode\FlowNetwork\SyncTracker\Models\SyncTrackedEntity
+     * @var SyncTrackedEntity
      */
     public $syncInfo;
 

@@ -1,0 +1,17 @@
+{
+  "version": 1,
+  "skills": {
+    "crafting-effective-readmes": {
+      "source": "softaworks/agent-toolkit",
+      "sourceType": "github",
+      "skillPath": "skills/crafting-effective-readmes/SKILL.md",
+      "computedHash": "c931a8c22160e8925400778fcb2266b5d1df762f3052edba65f72479f79f2d6c"
+    },
+    "readme-creator": {
+      "source": "mblode/agent-skills",
+      "sourceType": "github",
+      "skillPath": "skills/readme-creator/SKILL.md",
+      "computedHash": "037fdf495a37f45b204e07db5bba2941bd4a15d652a72e9d22105fc540900ed9"
+    }
+  }
+}

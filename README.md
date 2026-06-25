@@ -1,43 +1,48 @@
 # Laravel Sync Tracker
 
-<p align="center">
-  <img src="https://raw.githubusercontent.com/andreagroferreira/laravel-sync-tracker/main/art/banner.png" alt="Laravel Sync Tracker Banner" width="100%">
-</p>
-
-[![Latest Version on Packagist](https://img.shields.io/packagist/v/andreagroferreira/redis-stream.svg?style=flat-square)](https://packagist.org/packages/andreagroferreira/laravel-sync-tracker)
-[![Total Downloads](https://img.shields.io/packagist/dt/andreagroferreira/redis-stream.svg?style=flat-square)](https://packagist.org/packages/andreagroferreira/laravel-sync-tracker)
+[![Latest Version on Packagist](https://img.shields.io/packagist/v/andreagroferreira/laravel-sync-tracker.svg?style=flat-square)](https://packagist.org/packages/andreagroferreira/laravel-sync-tracker)
+[![Total Downloads](https://img.shields.io/packagist/dt/andreagroferreira/laravel-sync-tracker.svg?style=flat-square)](https://packagist.org/packages/andreagroferreira/laravel-sync-tracker)
 [![MIT Licensed](https://img.shields.io/badge/license-MIT-brightgreen.svg?style=flat-square)](LICENSE.md)
-[![PHP Version Support](https://img.shields.io/packagist/php-v/andreagroferreira/redis-stream.svg?style=flat-square)](https://packagist.org/packages/andreagroferreira/laravel-sync-tracker)
-[![Laravel Version Support](https://img.shields.io/badge/Laravel-9.x%20|%2010.x%20|%2012.x-brightgreen.svg?style=flat-square)](https://packagist.org/packages/andreagroferreira/laravel-sync-tracker)
-[![GitHub forks](https://img.shields.io/github/forks/andreagroferreira/laravel-redis-stream.svg?style=social&label=Fork&maxAge=2592000)](https://github.com/andreagroferreira/laravel-sync-tracker)
-[![GitHub stars](https://img.shields.io/github/stars/andreagroferreira/laravel-redis-stream.svg?style=social&label=Star&maxAge=2592000)](https://github.com/andreagroferreira/laravel-sync-tracker)
+[![PHP Version Support](https://img.shields.io/packagist/php-v/andreagroferreira/laravel-sync-tracker.svg?style=flat-square)](https://packagist.org/packages/andreagroferreira/laravel-sync-tracker)
+[![Laravel Version Support](https://img.shields.io/badge/Laravel-11.x%20|%2012.x%20|%2013.x-brightgreen.svg?style=flat-square)](https://packagist.org/packages/andreagroferreira/laravel-sync-tracker)
+[![GitHub stars](https://img.shields.io/github/stars/steadfast-collective/laravel-sync-tracker.svg?style=social&label=Star&maxAge=2592000)](https://github.com/steadfast-collective/laravel-sync-tracker)
 
-A powerful Laravel package for tracking entity synchronization status between systems. Easily manage data synchronization between your Laravel application and external services like CRMs, ERPs, or any third-party API.
+Track the sync status of any Eloquent model against external systems — CRMs, ERPs, e-commerce platforms, or any third-party API. Record external IDs, per-source metadata, and sync timestamps, then query your models by what they're synced to.
 
-## Details about this fork
-This fork builds on the excellent work of @andreagroferreira with a few changes to suit our usage needs.
+```php
+$user->syncData('salesforce')->markAsSynced('SF-123456', ['account_type' => 'customer']);
 
-We hope in time to offer PRs back to the source branch for any of our changes which fit with the needs of the main package.
+$user->syncData('salesforce')->isSynced();      // true
+$user->syncData('salesforce')->external_id;      // 'SF-123456'
 
-A few misc notes about the changes or observations which might be useful:
+User::hasExternalId('salesforce')->get();        // every user synced to Salesforce
+```
 
- - Most of these changes will be made to Trait usage because that's how we're using it. PRs with tests for the Facade options are welcome.
- - We are separating the sync metadata from the main sync data. So you can call `markAsSynced` without updating the meta, and introducing options to merge instead of totally overwriting the metadata.
- - I suspect there are some bugs related to the different sources, we are not working with multiple sources so I'm not looking into them. For example I think `markAsSynced` should pass the source as the matching attributes, instead of values.
+## About this fork
+
+This fork builds on the original [`andreagroferreira/laravel-sync-tracker`](https://github.com/andreagroferreira/laravel-sync-tracker) by [@andreagroferreira](https://github.com/andreagroferreira), with breaking changes to properly support multiple sync sources and a simpler, source-scoped API.
+
+- **The API is source-scoped.** `$model->syncData($source)` returns the tracking entity for one source, and every read and write happens on it. You no longer thread a `$source` argument through each call.
+- **Sync metadata is separate from sync state.** You can `markAsSynced()` without touching metadata, and `mergeSyncMetadata()` to update a few keys instead of overwriting everything.
+- **The old model methods were removed**, not just deprecated. They can be polyfilled by adding the `DeprecatedSyncTrackerMethods` trait — see [Upgrading](#upgrading-from-v1).
+- The active examples below cover trait usage, which is how we use it. PRs with tests for the facade are welcome.
+
+> **Upgrading from v1?** v2 is a breaking change (the `source` column becomes `NOT NULL` and existing data needs manual cleanup). Read [UPGRADE.md](UPGRADE.md) **before** migrating — it includes the full API mapping, the data-migration SQL, and a paste-ready AI migration prompt.
+
+## Requirements
+
+- PHP 8.2+
+- Laravel 11, 12, or 13
 
 ## Features
 
-- 🔄 **Track sync status** of any Eloquent model with external systems
-- 🔍 **Find models by external ID** from various sources
-- 🕒 **Track timestamps** for creation, update, and deletion events
-- 🧩 **Support for multiple sync sources** within the same application
-- 📊 **Store metadata** about sync operations for audit trails
-- 🛠️ **Highly configurable** to suit your specific needs
-- 🔌 **Easy integration** with existing Laravel applications
-
-<p align="center">
-  <img src="https://raw.githubusercontent.com/andreagroferreira/laravel-sync-tracker/main/art/flow-diagram.png" alt="Sync Flow Diagram" width="80%">
-</p>
+- 🔄 **Track sync status** of any Eloquent model against external systems
+- 🧩 **Multiple sources per model** — track the same record in Salesforce, HubSpot, and your ERP independently
+- 🔍 **Find models by external ID** and source
+- 📊 **Per-source metadata** for audit trails, with set-or-merge semantics
+- 🕒 **Automatic lifecycle timestamps** for create / update / delete events
+- 🔌 **Query scopes** to filter models by what they're synced to
+- 🛠️ **Configurable** per model and globally
 
 ## Table of Contents
 
@@ -48,6 +53,7 @@ A few misc notes about the changes or observations which might be useful:
 - [Real-world Examples](#real-world-examples)
 - [Events](#events)
 - [Custom Implementations](#custom-implementations)
+- [Upgrading from v1](#upgrading-from-v1)
 - [Testing](#testing)
 - [Changelog](#changelog)
 - [Contributing](#contributing)
@@ -57,54 +63,62 @@ A few misc notes about the changes or observations which might be useful:
 
 ## Installation
 
-You can install the package via composer:
+Install via Composer:
 
 ```bash
 composer require andreagroferreira/laravel-sync-tracker
 ```
 
-## Configuration
+### Install with an AI agent
 
-Publish the configuration and migrations:
+This fork isn't on Packagist, so it installs from the GitHub repo. Paste this into your coding agent:
 
-```bash
-php artisan vendor:publish --provider="WizardingCode\FlowNetwork\SyncTracker\SyncTrackerServiceProvider" --tag="config"
-php artisan vendor:publish --provider="WizardingCode\FlowNetwork\SyncTracker\SyncTrackerServiceProvider" --tag="migrations"
+```text
+Add the steadfast-collective fork of andreagroferreira/laravel-sync-tracker to this Laravel app. It's hosted on a GitHub repo, not on Packagist. Add a VCS repository entry for https://github.com/steadfast-collective/laravel-sync-tracker to composer.json, then require it with `composer require andreagroferreira/laravel-sync-tracker:dev-fix/multi-source`. Publish the migrations (tag "migrations" on the WizardingCode\FlowNetwork\SyncTracker\SyncTrackerServiceProvider provider) and run `php artisan migrate`. Publishing the config (tag "config") is optional — only do it if the defaults need changing.
 ```
 
-Then run the migrations:
+## Configuration
+
+Publish the migrations and run them:
 
 ```bash
+php artisan vendor:publish --provider="WizardingCode\FlowNetwork\SyncTracker\SyncTrackerServiceProvider" --tag="migrations"
 php artisan migrate
 ```
 
-The published configuration file (`config/sync-tracker.php`) allows you to customize how sync tracking works:
+Publishing the config is **optional** — the package works on its defaults. Only publish it if you need to change them:
+
+```bash
+php artisan vendor:publish --provider="WizardingCode\FlowNetwork\SyncTracker\SyncTrackerServiceProvider" --tag="config"
+```
+
+The published config file (`config/sync-tracker.php`):
 
 ```php
 return [
-    // The table name used to store sync tracking information
+    // The table name used to store sync tracking information.
     'table_name' => 'sync_tracked_entities',
 
-    // Default tracking options
+    // Whether a tracking call may omit the sync source. When enabled (the default),
+    // omitting the source resolves to the 'default' source. Disable it for strict
+    // mode when working with multiple sources, so a missing source throws instead of
+    // silently using 'default'. An empty source string ('') always throws.
+    'allow_empty_source' => true,
+
+    // Default automatic lifecycle tracking.
     'default_tracking' => [
-        // Whether to track creation timestamps by default
         'track_created' => true,
-        
-        // Whether to track update timestamps by default
         'track_updated' => true,
-        
-        // Whether to track deletion timestamps by default
         'track_deleted' => true,
     ],
 
-    // Custom tracking models configuration
+    // Per-model overrides for the lifecycle tracking above.
     'models' => [
-        // Example of model-specific configuration
-        App\Models\User::class => [
-            'track_created' => true,
-            'track_updated' => false,
-            'track_deleted' => true,
-        ],
+        // App\Models\User::class => [
+        //     'track_created' => true,
+        //     'track_updated' => false,
+        //     'track_deleted' => true,
+        // ],
     ],
 ];
 ```
@@ -122,253 +136,117 @@ use Illuminate\Database\Eloquent\Model;
 class User extends Model
 {
     use HasSyncTracking;
-    
-    // ...
 }
 ```
 
-Then you can use the methods provided by the trait:
+Call `syncData()` to get the tracking entity, then read and write everything through it:
 
 ```php
 $user = User::find(1);
 
-// Mark the model as synced
-$user->markAsSynced('external-123', 'salesforce', ['meta' => 'data']);
+// Mark the model as synced (external ID + optional metadata)
+$user->syncData()->markAsSynced('external-123', ['meta' => 'data']);
 
-// Check if model is synced
-if ($user->isSynced()) {
-    // Do something
+// Check whether it's synced
+if ($user->syncData()->isSynced()) {
+    // ...
 }
 
-// Get sync information
-$externalId = $user->getExternalId();
-$source = $user->getSyncSource();
-$metadata = $user->getSyncMetadata();
+// Read sync information — the entity is a plain Eloquent model
+$externalId = $user->syncData()->external_id;
+$metadata   = $user->syncData()->metadata;
+$syncedAt   = $user->syncData()->synced_at;
+
+// Find a model by its external ID
+$user = User::findByExternalId('external-123');
 ```
 
+> Calls that omit the source use the `'default'` source. Tracking a model in more than one system? See [Multiple Source Systems](#multiple-source-systems).
+
 ### Using the Facade
+
+Handy when you don't have the model's trait in hand:
 
 ```php
 use WizardingCode\FlowNetwork\SyncTracker\Facades\SyncTracker;
 
-// Mark a model as synced
-SyncTracker::markAsSynced($model, 'external-123', 'salesforce', ['meta' => 'data']);
+// Mark a model as synced: (model, externalId, source, metadata)
+SyncTracker::markAsSynced($model, 'external-123', metadata: ['meta' => 'data']);
 
-// Check if model is synced
+// Check if synced
 if (SyncTracker::isSynced($model)) {
-    // Do something
+    // ...
 }
 
-// Find a model by external ID and source
-$user = SyncTracker::findByExternalId('external-123', 'salesforce', User::class);
+// Get the tracking row
+$syncInfo = SyncTracker::getSyncInfo($model);
 ```
 
 ### Working with Metadata
-You can store arbitrary metadata related to your sync status using `setSyncMetadata` and `mergeSyncMetadata`:
+
+Store arbitrary metadata with `setSyncMetadata` (replace) and `mergeSyncMetadata` (patch):
 
 ```php
 $user = User::find(1);
 
-// Set all the metadata after pushing
-$user->setSyncMetadata([
+// Replace all metadata
+$user->syncData()->setSyncMetadata([
     'remote_modified_at' => $responseData['modified_at'],
-    'direction' => 'pull',
-    'status' => 'success',
+    'direction'          => 'pull',
+    'status'             => 'success',
 ]);
 
-// Use mergeSyncMetadata to only update some fields. remote_modified_at won't be touched.
-$user->mergeSyncMetadata([
+// Patch a few keys — remote_modified_at is left untouched
+$user->syncData()->mergeSyncMetadata([
     'direction' => 'push',
-    'status' => 'failed',
+    'status'    => 'failed',
 ]);
 ```
 
 ## Advanced Usage
 
-### Sync Multiple Source Systems
+### Multiple Source Systems
 
-Track entities that exist in multiple external systems:
+The examples so far used the `'default'` source. Pass a source name to `syncData()` to track the same model in several systems independently — each source keeps its own external ID, metadata, and timestamps:
 
 ```php
-// Track the same user in different systems
 $user = User::find(1);
 
-// Mark as synced with Salesforce
-$user->markAsSynced('SF-123456', 'salesforce', [
-    'last_sync' => now(),
-    'account_type' => 'customer'
+// Synced with Salesforce
+$user->syncData('salesforce')->markAsSynced('SF-123456', [
+    'last_sync'    => now(),
+    'account_type' => 'customer',
 ]);
 
-// In another part of your app, sync with HubSpot
-SyncTracker::markAsSynced($user, 'HS-789012', 'hubspot', [
+// ...and elsewhere, synced with HubSpot
+$user->syncData('hubspot')->markAsSynced('HS-789012', [
     'contact_owner' => 'jane.doe@example.com',
-    'lead_score' => 85
+    'lead_score'    => 85,
 ]);
 
-// Get all sync trackers for this user
-$syncTrackers = $user->syncTrackers()->get();
+// All real sync rows for this user (excluding the automatic lifecycle row)
+$syncTrackers = $user->syncTrackers()->withoutLifecycle()->get();
 
-// Check if synced with specific system
-$salesforceId = $user->getExternalIdFromSource('salesforce');
-$hubspotId = $user->getExternalIdFromSource('hubspot');
+// Each source's external ID
+$salesforceId = $user->syncData('salesforce')->external_id;
+$hubspotId    = $user->syncData('hubspot')->external_id;
 ```
 
-### Batch Synchronization with Progress Tracking
-
-When syncing multiple entities in a batch job:
-
-```php
-// In a command or job
-public function handle()
-{
-    $users = User::where('needs_sync', true)->get();
-    $totalUsers = $users->count();
-    $processed = 0;
-    
-    foreach ($users as $user) {
-        // Sync with external API (pseudo code)
-        $externalData = $this->apiClient->syncUser($user);
-        
-        // Mark as synced with metadata for tracking
-        SyncTracker::markAsSynced($user, $externalData['id'], 'api', [
-            'batch_id' => $this->batchId,
-            'sync_attempt' => now(),
-            'sync_status' => 'success',
-            'progress' => ++$processed / $totalUsers
-        ]);
-        
-        // Update user status
-        $user->update(['needs_sync' => false]);
-    }
-}
-```
-
-### Handling Failed Syncs
-
-Track failed synchronization attempts:
-
-```php
-try {
-    // Attempt to sync with external system
-    $response = $this->apiClient->createOrUpdate($product);
-    
-    // If successful, mark as synced
-    SyncTracker::markAsSynced($product, $response['id'], 'erp', [
-        'sync_status' => 'success',
-        'last_successful_sync' => now()
-    ]);
-    
-} catch (ApiException $e) {
-    // If failed, track the failure but don't update synced_at
-    $product->syncTracking()->update([
-        'metadata->sync_status' => 'failed',
-        'metadata->error_message' => $e->getMessage(),
-        'metadata->error_code' => $e->getCode(),
-        'metadata->retry_count' => DB::raw('COALESCE(metadata->\'retry_count\', 0) + 1'),
-        'metadata->last_attempt' => now()->toIso8601String()
-    ]);
-    
-    // Maybe schedule a retry
-    if (($product->getSyncMetadata()['retry_count'] ?? 0) < 5) {
-        SyncRetryJob::dispatch($product)->delay(now()->addMinutes(30));
-    }
-}
-```
-
-### Tracking Bi-directional Syncs
-
-Track changes from both your system and external systems:
-
-```php
-// When a local change is made
-$product = Product::find(1);
-$product->update(['price' => 29.99]);
-
-// Mark that this entity needs to be synced
-$product->syncTracking()->update([
-    'metadata->needs_upstream_sync' => true,
-    'metadata->local_changes' => ['price' => 29.99],
-    'updated_at' => now() // This triggers the trait's auto-tracking 
-]);
-
-// When receiving webhooks from an external system
-public function handleExternalUpdate(Request $request)
-{
-    $externalId = $request->input('id');
-    $source = 'erp';
-    
-    $product = SyncTracker::findByExternalId($externalId, $source, Product::class);
-    
-    if ($product) {
-        // Update local record with data from external system
-        $product->update([
-            'name' => $request->input('name'),
-            'sku' => $request->input('sku')
-        ]);
-        
-        // Mark as synced from downstream with metadata
-        SyncTracker::markAsSynced($product, $externalId, $source, [
-            'sync_type' => 'downstream',
-            'webhook_id' => $request->input('webhook_id'),
-            'external_updated_at' => $request->input('updated_at')
-        ]);
-    }
-}
-```
-
-<p align="center">
-  <img src="https://raw.githubusercontent.com/andreagroferreira/laravel-sync-tracker/main/art/bidirectional-sync.png" alt="Bidirectional Sync" width="70%">
-</p>
+> **Lifecycle rows:** create/update/delete timestamps are recorded on a separate row under the `'_lifecycle'` sentinel source, so they never clobber a real source's data. Filter it out of listings with the `withoutLifecycle()` scope.
 
 ### Query Scopes for Sync Status
 
-Define query scopes on your models for easy filtering:
+The trait ships with the `hasExternalId` scope. It filters to models that have a tracking row carrying a non-null `external_id` (which also excludes the automatic lifecycle rows). Pass a source to require a sync to that specific one:
 
 ```php
-use WizardingCode\FlowNetwork\SyncTracker\Traits\HasSyncTracking;
+// Synced to any source
+Product::hasExternalId()->get();
 
-class Product extends Model
-{
-    use HasSyncTracking;
-    
-    // Scope for products that need syncing to the ERP
-    public function scopeNeedsErpSync($query)
-    {
-        return $query->whereHas('syncTracking', function ($q) {
-            $q->where('source', 'erp')
-              ->where(function ($q) {
-                  $q->whereNull('synced_at')
-                    ->orWhere('updated_at', '>', 'synced_at');
-              });
-        });
-    }
-    
-    // Scope for products that have been synced with Shopify
-    public function scopeSyncedWithShopify($query)
-    {
-        return $query->whereHas('syncTracking', function ($q) {
-            $q->where('source', 'shopify')
-              ->whereNotNull('synced_at');
-        });
-    }
-    
-    // Scope for products that failed to sync
-    public function scopeFailedSync($query, $source = null)
-    {
-        return $query->whereHas('syncTracking', function ($q) use ($source) {
-            $q->when($source, function ($q) use ($source) {
-                $q->where('source', $source);
-              })
-              ->whereJsonContains('metadata->sync_status', 'failed');
-        });
-    }
-}
-
-// Then use in your application
-$needsSyncProducts = Product::needsErpSync()->get();
-$shopifyProducts = Product::syncedWithShopify()->get();
-$failedProducts = Product::failedSync('erp')->get();
+// Synced specifically to 'shopify'
+Product::hasExternalId('shopify')->get();
 ```
+
+For finer-grained filtering, query the `syncTrackers()` relation directly (e.g. `whereHas('syncTrackers', ...)`) — its rows carry `source`, `synced_at`, and `metadata` columns.
 
 ## Real-world Examples
 
@@ -379,251 +257,154 @@ class ProductSyncService
 {
     public function syncToShopify(Product $product)
     {
-        // If product exists in Shopify, update it, otherwise create it
-        if ($product->getExternalIdFromSource('shopify')) {
-            $shopifyId = $product->getExternalIdFromSource('shopify');
+        $shopifyId = $product->syncData('shopify')->external_id;
+
+        if ($shopifyId) {
             $response = $this->shopifyClient->updateProduct($shopifyId, [
-                'title' => $product->name,
-                'price' => $product->price,
-                'inventory_quantity' => $product->stock
+                'title'              => $product->name,
+                'price'              => $product->price,
+                'inventory_quantity' => $product->stock,
             ]);
         } else {
             $response = $this->shopifyClient->createProduct([
-                'title' => $product->name,
-                'price' => $product->price,
-                'inventory_quantity' => $product->stock
+                'title'              => $product->name,
+                'price'              => $product->price,
+                'inventory_quantity' => $product->stock,
             ]);
-            
+
             $shopifyId = $response['id'];
         }
-        
-        // Track the sync with detailed metadata
-        $product->markAsSynced($shopifyId, 'shopify', [
-            'shopify_handle' => $response['handle'],
-            'variants_synced' => count($response['variants']),
-            'images_synced' => count($response['images']),
+
+        $product->syncData('shopify')->markAsSynced($shopifyId, [
+            'shopify_handle'     => $response['handle'],
+            'variants_synced'    => count($response['variants']),
+            'images_synced'      => count($response['images']),
             'shopify_updated_at' => $response['updated_at'],
-            'inventory_tracked' => true
+            'inventory_tracked'  => true,
         ]);
-        
+
         return $response;
-    }
-    
-    public function syncFromShopify(array $shopifyData)
-    {
-        $shopifyId = $shopifyData['id'];
-        
-        // Try to find existing product
-        $product = SyncTracker::findByExternalId($shopifyId, 'shopify', Product::class);
-        
-        if (!$product) {
-            // Create new local product from Shopify data
-            $product = Product::create([
-                'name' => $shopifyData['title'],
-                'price' => $shopifyData['price'],
-                'stock' => $shopifyData['inventory_quantity'],
-                'description' => $shopifyData['body_html']
-            ]);
-        } else {
-            // Update existing product
-            $product->update([
-                'name' => $shopifyData['title'],
-                'price' => $shopifyData['price'],
-                'stock' => $shopifyData['inventory_quantity'],
-                'description' => $shopifyData['body_html']
-            ]);
-        }
-        
-        // Track the sync
-        SyncTracker::markAsSynced($product, $shopifyId, 'shopify', [
-            'shopify_handle' => $shopifyData['handle'],
-            'shopify_updated_at' => $shopifyData['updated_at'],
-            'sync_direction' => 'from_shopify',
-            'webhook_id' => request()->header('X-Shopify-Webhook-Id')
-        ]);
-        
-        return $product;
     }
 }
 ```
 
-### CRM Integration with Conflict Resolution
+### Detecting Conflicts with `synced_at`
+
+Use the stored `synced_at` to tell whether the remote record changed since your last sync, and stamp the outcome into metadata:
 
 ```php
 class ContactSyncService
 {
     public function syncWithCrm(User $user)
     {
-        $userData = [
-            'name' => $user->name,
-            'email' => $user->email,
-            'phone' => $user->phone,
-            'address' => $user->address
-        ];
-        
-        $syncInfo = $user->syncTracking;
-        $externalId = $user->getExternalId();
-        
-        // Check if this is an update or a new record
+        $tracker    = $user->syncData('crm');
+        $externalId = $tracker->external_id;
+        $fields     = $user->only(['name', 'email', 'phone']);
+
+        $remoteChangedSinceLastSync = false;
+
         if ($externalId) {
-            // Get the latest data from CRM first
             $crmData = $this->crmClient->getContact($externalId);
-            
-            // Compare timestamps to detect conflicts
-            $crmUpdatedAt = Carbon::parse($crmData['updated_at']);
-            $localUpdatedAt = $syncInfo->updated_at;
-            
-            if ($crmUpdatedAt->gt($localUpdatedAt)) {
-                // Remote has newer data, handle conflict
-                if (config('sync.conflict_strategy') === 'remote_wins') {
-                    // Update local with remote data
-                    $user->update([
-                        'name' => $crmData['name'],
-                        'email' => $crmData['email'],
-                        'phone' => $crmData['phone'],
-                        'address' => $crmData['address']
-                    ]);
-                    
-                    $result = $crmData;
-                    $conflictResolution = 'remote_won';
-                } else {
-                    // Push local changes to CRM anyway
-                    $result = $this->crmClient->updateContact($externalId, $userData);
-                    $conflictResolution = 'local_force_push';
-                }
-            } else {
-                // Local has newer data, update CRM
-                $result = $this->crmClient->updateContact($externalId, $userData);
-                $conflictResolution = 'local_newer';
-            }
+            $remoteChangedSinceLastSync = Carbon::parse($crmData['updated_at'])->gt($tracker->synced_at);
+
+            $result = $this->crmClient->updateContact($externalId, $fields);
         } else {
-            // Create new CRM contact
-            $result = $this->crmClient->createContact($userData);
-            $externalId = $result['id'];
-            $conflictResolution = 'new_record';
+            $result = $this->crmClient->createContact($fields);
         }
-        
-        // Track the sync with detailed metadata
-        $user->markAsSynced($externalId, 'crm', [
-            'sync_result' => 'success',
-            'conflict_detected' => $conflictResolution !== 'new_record',
-            'conflict_resolution' => $conflictResolution,
-            'fields_synced' => array_keys($userData),
-            'crm_updated_at' => $result['updated_at']
+
+        $user->syncData('crm')->markAsSynced($result['id'], [
+            'crm_updated_at'    => $result['updated_at'],
+            'conflict_detected' => $remoteChangedSinceLastSync,
         ]);
-        
+
         return $result;
     }
 }
 ```
 
-<p align="center">
-  <img src="https://raw.githubusercontent.com/andreagroferreira/laravel-sync-tracker/main/art/conflict-resolution.png" alt="Conflict Resolution Workflow" width="75%">
-</p>
+### Handling Failed Syncs
 
-### Syncing Data with Legacy Systems through ETL Processes
+On failure, record the error in metadata without touching `synced_at` (so the row still reads as "last synced at X"):
 
 ```php
-class LegacySystemSyncJob implements ShouldQueue
-{
-    use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
-    
-    protected $batchId;
-    protected $models;
-    protected $source = 'legacy_erp';
-    
-    public function __construct(array $modelIds, string $batchId)
-    {
-        $this->models = $modelIds;
-        $this->batchId = $batchId;
+try {
+    $response = $this->apiClient->createOrUpdate($product);
+
+    $product->syncData('erp')->markAsSynced($response['id'], [
+        'sync_status'           => 'success',
+        'last_successful_sync'  => now(),
+    ]);
+} catch (ApiException $e) {
+    $tracker = $product->syncData('erp');
+    $retryCount = ($tracker->metadata['retry_count'] ?? 0) + 1;
+
+    // mergeSyncMetadata patches keys without overwriting external_id or synced_at
+    $tracker->mergeSyncMetadata([
+        'sync_status'   => 'failed',
+        'error_message' => $e->getMessage(),
+        'error_code'    => $e->getCode(),
+        'retry_count'   => $retryCount,
+        'last_attempt'  => now()->toIso8601String(),
+    ]);
+
+    if ($retryCount < 5) {
+        SyncRetryJob::dispatch($product)->delay(now()->addMinutes(30));
     }
-    
-    public function handle()
-    {
-        // Connect to legacy system via ODBC or similar
-        $connection = $this->getLegacyConnection();
-        
-        foreach ($this->models as $modelType => $ids) {
-            $modelClass = $this->getModelClass($modelType);
-            
-            foreach ($ids as $id) {
-                $model = $modelClass::find($id);
-                
-                if (!$model) {
-                    continue;
-                }
-                
-                try {
-                    // Prepare data for legacy system format
-                    $legacyData = $this->transformToLegacyFormat($model);
-                    
-                    // Check if record exists in legacy system
-                    $externalId = $model->getExternalIdFromSource($this->source);
-                    
-                    if ($externalId) {
-                        // Update existing record
-                        $result = $connection->update(
-                            $this->getLegacyTableName($modelType),
-                            $legacyData,
-                            "ID = '$externalId'"
-                        );
-                    } else {
-                        // Insert new record
-                        $externalId = $this->generateLegacyId($model);
-                        $legacyData['ID'] = $externalId;
-                        
-                        $result = $connection->insert(
-                            $this->getLegacyTableName($modelType),
-                            $legacyData
-                        );
-                    }
-                    
-                    // Track successful sync
-                    SyncTracker::markAsSynced($model, $externalId, $this->source, [
-                        'batch_id' => $this->batchId,
-                        'sync_timestamp' => now()->timestamp,
-                        'tables_affected' => [$this->getLegacyTableName($modelType)],
-                        'sync_mode' => $externalId ? 'update' : 'insert',
-                        'legacy_fields' => array_keys($legacyData)
-                    ]);
-                    
-                } catch (\Exception $e) {
-                    // Track failed sync but don't update synced_at
-                    if ($model->syncTracking) {
-                        $model->syncTracking->update([
-                            'metadata->sync_status' => 'failed',
-                            'metadata->error' => $e->getMessage(),
-                            'metadata->batch_id' => $this->batchId,
-                            'metadata->attempt_timestamp' => now()->timestamp
-                        ]);
-                    }
-                    
-                    // Log error for admin review
-                    Log::error("Legacy sync failed for {$modelType} #{$id}: " . $e->getMessage());
-                }
-            }
-        }
+}
+```
+
+### Tracking Bi-directional Syncs
+
+```php
+// When a local change is made, flag it for upstream sync
+$product = Product::find(1);
+$product->update(['price' => 29.99]);
+
+$product->syncData('erp')->mergeSyncMetadata([
+    'needs_upstream_sync' => true,
+    'local_changes'       => ['price' => 29.99],
+]);
+
+// When receiving webhooks from an external system
+public function handleExternalUpdate(Request $request)
+{
+    $externalId = $request->input('id');
+    $source     = 'erp';
+
+    $product = SyncTracker::findByExternalId($externalId, $source, Product::class);
+
+    if ($product) {
+        $product->update([
+            'name' => $request->input('name'),
+            'sku'  => $request->input('sku'),
+        ]);
+
+        $product->syncData($source)->markAsSynced($externalId, [
+            'sync_type'         => 'downstream',
+            'webhook_id'        => $request->input('webhook_id'),
+            'external_updated_at' => $request->input('updated_at'),
+        ]);
     }
 }
 ```
 
 ## Events
 
-This package dispatches Laravel events that you can listen for in your application:
+`EntitySynced` is dispatched automatically on every successful sync — whether you sync via the trait (`syncData(...)->markAsSynced(...)`) or the facade. `SyncFailed` is provided for you to dispatch from your own failure handling.
 
 ```php
 // In your EventServiceProvider
 protected $listen = [
-    'WizardingCode\FlowNetwork\SyncTracker\Events\EntitySynced' => [
-        'App\Listeners\HandleEntitySynced',
+    \WizardingCode\FlowNetwork\SyncTracker\Events\EntitySynced::class => [
+        \App\Listeners\HandleEntitySynced::class,
     ],
-    'WizardingCode\FlowNetwork\SyncTracker\Events\SyncFailed' => [
-        'App\Listeners\HandleSyncFailed',
+    \WizardingCode\FlowNetwork\SyncTracker\Events\SyncFailed::class => [
+        \App\Listeners\HandleSyncFailed::class,
     ],
 ];
 ```
 
-Then create listeners to handle these events:
+`EntitySynced` carries `$model` and `$syncInfo` (the `SyncTrackedEntity`):
 
 ```php
 namespace App\Listeners;
@@ -634,140 +415,83 @@ class HandleEntitySynced
 {
     public function handle(EntitySynced $event)
     {
-        $model = $event->model;
+        $model    = $event->model;
         $syncInfo = $event->syncInfo;
-        
-        // Notify admins of successful sync
+
         if ($model instanceof \App\Models\CriticalEntity) {
             \Notification::route('slack', config('services.slack.webhook_url'))
                 ->notify(new \App\Notifications\EntitySynced($model, $syncInfo));
         }
-        
-        // Invalidate any cache related to this model
+
         \Cache::tags([$model->getTable()])->flush();
     }
 }
 ```
 
+`SyncFailed` carries `$model`, `$source`, `$exception`, and `$metadata`.
+
 ## Custom Implementations
 
-### Creating a Custom Synchronization Manager
+### A REST Endpoint for External Systems to Check Sync Status
 
 ```php
-namespace App\Services;
-
-use WizardingCode\FlowNetwork\SyncTracker\Facades\SyncTracker;
-use Illuminate\Database\Eloquent\Model;
-
-class SalesforceSync
-{
-    protected $client;
-    
-    public function __construct(SalesforceClient $client)
-    {
-        $this->client = $client;
-    }
-    
-    public function syncAccount(Model $company)
-    {
-        // Check if already synced
-        $sfAccountId = $company->getExternalIdFromSource('salesforce');
-        
-        $companyData = [
-            'Name' => $company->name,
-            'BillingStreet' => $company->address,
-            'BillingCity' => $company->city,
-            'BillingState' => $company->state,
-            'BillingPostalCode' => $company->zip,
-            'BillingCountry' => $company->country,
-            'Phone' => $company->phone,
-            'Website' => $company->website
-        ];
-        
-        try {
-            if ($sfAccountId) {
-                // Update existing
-                $result = $this->client->update('Account', $sfAccountId, $companyData);
-            } else {
-                // Create new
-                $result = $this->client->create('Account', $companyData);
-                $sfAccountId = $result['id'];
-            }
-            
-            // Now sync all contacts for this company
-            $this->syncContacts($company, $sfAccountId);
-            
-            // Track successful sync with metadata
-            SyncTracker::markAsSynced($company, $sfAccountId, 'salesforce', [
-                'object_type' => 'Account',
-                'sf_last_modified' => $result['LastModifiedDate'] ?? now(),
-                'child_objects_synced' => [
-                    'contacts' => $company->users()->count()
-                ]
-            ]);
-            
-            return $result;
-            
-        } catch (\Exception $e) {
-            // Handle failure - track but don't update synced_at
-            if ($company->syncTracking) {
-                $company->syncTracking->update([
-                    'metadata->sync_status' => 'failed',
-                    'metadata->error' => $e->getMessage(),
-                    'metadata->last_attempt' => now()
-                ]);
-            }
-            
-            throw $e;
-        }
-    }
-    
-    protected function syncContacts(Model $company, string $sfAccountId)
-    {
-        // Implementation for syncing associated contacts...
-    }
-}
-```
-
-### Implement a REST API for External Systems to Check Sync Status
-
-```php
-// In a controller
 public function getSyncStatus(Request $request)
 {
     $request->validate([
         'model_type' => 'required|string',
-        'model_id' => 'required',
-        'source' => 'required|string'
+        'model_id'   => 'required',
+        'source'     => 'required|string',
     ]);
-    
+
     $modelClass = $this->getModelClassFromType($request->model_type);
     $model = $modelClass::find($request->model_id);
-    
-    if (!$model) {
-        return response()->json([
-            'error' => 'Model not found'
-        ], 404);
+
+    if (! $model) {
+        return response()->json(['error' => 'Model not found'], 404);
     }
-    
-    $syncInfo = $model->syncTracking()->where('source', $request->source)->first();
-    
-    if (!$syncInfo) {
+
+    // syncTrackers() is the live relation; ->first() returns null when not synced
+    $syncInfo = $model->syncTrackers()->where('source', $request->source)->first();
+
+    if (! $syncInfo) {
         return response()->json([
             'sync_status' => 'not_synced',
-            'model_type' => $request->model_type,
-            'model_id' => $request->model_id,
-            'source' => $request->source
+            'model_type'  => $request->model_type,
+            'model_id'    => $request->model_id,
+            'source'      => $request->source,
         ]);
     }
-    
+
     return response()->json([
-        'sync_status' => $syncInfo->synced_at ? 'synced' : 'pending',
-        'external_id' => $syncInfo->external_id,
+        'sync_status'    => $syncInfo->synced_at ? 'synced' : 'pending',
+        'external_id'    => $syncInfo->external_id,
         'last_synced_at' => $syncInfo->synced_at,
         'last_updated_at' => $syncInfo->updated_at,
-        'metadata' => $syncInfo->metadata
+        'metadata'       => $syncInfo->metadata,
     ]);
+}
+```
+
+## Upgrading from v1
+
+v2 moved the API onto the `SyncTrackedEntity` itself and made `source` a required, indexed column. **Existing `NULL`-source rows must be deduplicated and backfilled by hand before you migrate** — the package does not do it for you.
+
+Read [UPGRADE.md](UPGRADE.md) for:
+
+- the full deprecated → replacement method mapping,
+- the data-cleanup SQL to run before `php artisan migrate`,
+- a paste-ready prompt for migrating an app with an AI coding agent.
+
+If you want the old model methods (`markAsSynced()`, `getExternalId()`, `getSyncMetadata()`, the `syncTracking` relation, etc.) to keep working as deprecated delegates while you migrate, add the add-on trait alongside `HasSyncTracking`:
+
+```php
+use WizardingCode\FlowNetwork\SyncTracker\Traits\HasSyncTracking;
+use WizardingCode\FlowNetwork\SyncTracker\Traits\DeprecatedSyncTrackerMethods;
+
+class User extends Model
+{
+    use HasSyncTracking;
+    use DeprecatedSyncTrackerMethods; // optional, for backwards compatibility
 }
 ```
 
@@ -779,21 +503,23 @@ composer test
 
 ## Changelog
 
-Please see [CHANGELOG](CHANGELOG.md) for more information on what has changed recently.
+See [CHANGELOG.md](CHANGELOG.md) for what's changed recently.
 
 ## Contributing
 
-Please see [CONTRIBUTING](CONTRIBUTING.md) for details.
+See [CONTRIBUTING.md](CONTRIBUTING.md) for details.
 
 ## Security
 
-If you discover any security related issues, please email andre.ferreira@wizardingcode.io instead of using the issue tracker.
+If you discover a security issue in this fork, please email sami@steadfastcollective.com rather than using the issue tracker.
 
 ## Credits
 
-- [Andre Agro Ferreira](https://github.com/andreagroferreira)
+- [André Ferreira](https://github.com/andreagroferreira) — original author
+- [Steadfast Collective](https://github.com/steadfast-collective) — fork maintainer
+- [Sami Walbury](https://github.com/patabugen) — v2 source-scoped multi-source API, per-source metadata, Laravel 11–13 / PHP 8.5 support, and Postgres/MySQL/morph-map fixes
 - [All Contributors](../../contributors)
 
 ## License
 
-The MIT License (MIT). Please see [License File](LICENSE.md) for more information.
+The MIT License (MIT). See the [License File](LICENSE.md) for details.

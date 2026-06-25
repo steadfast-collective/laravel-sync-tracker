@@ -6,9 +6,9 @@ use Illuminate\Support\Facades\Facade;
 
 /**
  * @method static \WizardingCode\FlowNetwork\SyncTracker\Models\SyncTrackedEntity track(\Illuminate\Database\Eloquent\Model $model, array $attributes = [])
- * @method static \WizardingCode\FlowNetwork\SyncTracker\Models\SyncTrackedEntity markAsSynced(\Illuminate\Database\Eloquent\Model $model, ?string $externalId = null, ?string $source = null, array $metadata = [])
- * @method static \WizardingCode\FlowNetwork\SyncTracker\Models\SyncTrackedEntity|null getSyncInfo(\Illuminate\Database\Eloquent\Model $model)
- * @method static bool isSynced(\Illuminate\Database\Eloquent\Model $model)
+ * @method static \WizardingCode\FlowNetwork\SyncTracker\Models\SyncTrackedEntity markAsSynced(\Illuminate\Database\Eloquent\Model $model, ?string $externalId = null, ?string $source = null, ?array $metadata = null)
+ * @method static \WizardingCode\FlowNetwork\SyncTracker\Models\SyncTrackedEntity|null getSyncInfo(\Illuminate\Database\Eloquent\Model $model, ?string $source = null)
+ * @method static bool isSynced(\Illuminate\Database\Eloquent\Model $model, ?string $source = null)
  * @method static \Illuminate\Database\Eloquent\Model|null findByExternalId(string $externalId, string $source, string $modelClass)
  *
  * @see \WizardingCode\FlowNetwork\SyncTracker\SyncTracker

@@ -13,6 +13,7 @@
 
 namespace WizardingCode\FlowNetwork\SyncTracker\Tests;
 
+use Illuminate\Database\Eloquent\Model;
 use WizardingCode\FlowNetwork\SyncTracker\Tests\Models\TestModel;
 
 uses(TestCase::class)->in('Feature', 'Unit');
@@ -43,7 +44,7 @@ expect()->extend('toBeOne', function () {
 |
 */
 
-function createTestModel(string $name = 'Test Model'): \Illuminate\Database\Eloquent\Model
+function createTestModel(string $name = 'Test Model'): Model
 {
     return TestModel::create(['name' => $name]);
 }

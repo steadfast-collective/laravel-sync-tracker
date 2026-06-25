@@ -2,7 +2,7 @@
   "name": "andreagroferreira/laravel-sync-tracker",
   "description": "A Laravel package for tracking entity synchronization status between systems",
   "type": "library",
-  "version": "1.0.0",
+  "version": "2.0.0",
   "keywords": ["laravel", "sync", "tracker", "database", "orm"],
   "license": "MIT",
   "authors": [
@@ -23,17 +23,18 @@
     }
   },
   "require": {
-    "php": "^8.1|^8.2|^8.3|^8.4|^8.5",
-    "illuminate/support": "^10.0|^11.0|^12.0|^13.0",
-    "illuminate/database": "^10.0|^11.0|^12.0|^13.0"
+    "php": "^8.2|^8.3|^8.4|^8.5",
+    "illuminate/support": "^11.0|^12.0|^13.0",
+    "illuminate/database": "^11.0|^12.0|^13.0"
   },
   "require-dev": {
-    "larastan/larastan": "^1|^2|^3",
+    "larastan/larastan": "^2.9|^3",
+    "laravel/boost": "^2.4",
     "laravel/pint": "^1.0",
     "mockery/mockery": "^1.5",
-    "orchestra/testbench": "^8.0|^9.6|^10.0|^11.0",
-    "pestphp/pest": "^1.22|^2.0|^3.0|^4.0",
-    "pestphp/pest-plugin-laravel": "^1.4|^2.0|^3.0|^4.0"
+    "orchestra/testbench": "^9.6|^10.0|^11.0",
+    "pestphp/pest": "^2.28|^3.0|^4.0",
+    "pestphp/pest-plugin-laravel": "^2.2|^3.0|^4.0"
   },
   "scripts": {
     "test": "vendor/bin/pest",
@@ -44,6 +45,17 @@
     "allow-plugins": {
       "pestphp/pest-plugin": true,
       "pestphp/pest-plugin-laravel": true
+    },
+    "policy": {
+      "advisories": {
+        "ignore-id": {
+          "PKSA-mdq4-51ck-6kdq": "CVE-2026-48019 CRLF injection in email validation rule — runtime web vector. laravel/framework is a dev/test-only dep (testbench); CI only runs Pest on an ephemeral runner with no live app or attacker input. Not a risk here.",
+          "PKSA-8qx3-n5y5-vvnd": "CVE-2025-27515 file validation bypass — needs untrusted uploads to a running app. Dev/test-only dep; CI has no served HTTP surface. Not a risk here.",
+          "PKSA-q46n-4fdk-zjr4": "CVE-2024-13919 reflected XSS via route param on debug-mode error page — needs debug mode plus a browser victim. CI runs tests only, no victim. Not a risk here.",
+          "PKSA-qzrn-rnz3-85w1": "CVE-2024-13918 reflected XSS via request param on debug-mode error page — needs debug mode plus a browser victim. CI runs tests only, no victim. Not a risk here.",
+          "PKSA-w7xr-vk7n-rstm": "CVE-2024-52301 environment manipulation via query string — needs a live app receiving crafted HTTP requests. Dev/test-only dep; CI has no served HTTP surface. Not a risk here."
+        }
+      }
     }
   },
   "minimum-stability": "stable",

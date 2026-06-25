@@ -2,7 +2,9 @@
 
 namespace WizardingCode\FlowNetwork\SyncTracker\Traits;
 
-use Illuminate\Database\Eloquent\Relations\MorphOne;
+use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Relations\MorphMany;
+use WizardingCode\FlowNetwork\SyncTracker\Exceptions\EmptySourceException;
 use WizardingCode\FlowNetwork\SyncTracker\Models\SyncTrackedEntity;
 
 trait HasSyncTracking
@@ -14,10 +16,14 @@ trait HasSyncTracking
      */
     protected static function bootHasSyncTracking()
     {
+        // Lifecycle events are recorded on their own row under the
+        // '_lifecycle' sentinel source. They must never share a row with a
+        // real source: stamping created/updated/deleted onto a source row
+        // would corrupt that source's record of its last sync.
         static::created(function ($model) {
             if (config('sync-tracker.default_tracking.track_created', true)) {
-                $model->syncTracking()->updateOrCreate(
-                    ['trackable_type' => get_class($model), 'trackable_id' => $model->getKey()],
+                $model->syncTrackers()->updateOrCreate(
+                    ['source' => SyncTrackedEntity::LIFECYCLE_SOURCE],
                     ['created_at' => now()]
                 );
             }
@@ -25,8 +31,8 @@ trait HasSyncTracking
 
         static::updated(function ($model) {
             if (config('sync-tracker.default_tracking.track_updated', true)) {
-                $model->syncTracking()->updateOrCreate(
-                    ['trackable_type' => get_class($model), 'trackable_id' => $model->getKey()],
+                $model->syncTrackers()->updateOrCreate(
+                    ['source' => SyncTrackedEntity::LIFECYCLE_SOURCE],
                     ['updated_at' => now()]
                 );
             }
@@ -34,20 +40,38 @@ trait HasSyncTracking
 
         static::deleted(function ($model) {
             if (config('sync-tracker.default_tracking.track_deleted', true)) {
-                $model->syncTracking()->updateOrCreate(
-                    ['trackable_type' => get_class($model), 'trackable_id' => $model->getKey()],
+                $model->syncTrackers()->updateOrCreate(
+                    ['source' => SyncTrackedEntity::LIFECYCLE_SOURCE],
                     ['deleted_at' => now()]
                 );
             }
         });
     }
 
+    /**
+     * Get the sync tracking entity for the given source, creating an unsaved
+     * one when this model has not been tracked against that source yet. All
+     * sync reads and writes live on the returned entity.
+     *
+     * An omitted source resolves to the 'default' source (if the
+     * allow_empty_source config option permits omitting it).
+     */
+    public function syncData(?string $source = null): SyncTrackedEntity
+    {
+        return SyncTrackedEntity::for($this, $source);
+    }
+
     public static function findByExternalId(string $externalId, ?string $source = null)
     {
+        EmptySourceException::throwIfDisallowed($source);
+
+        // Sourceless rows live on the 'default' source.
+        $source ??= SyncTrackedEntity::DEFAULT_SOURCE;
+
         $tracking = SyncTrackedEntity::where([
             'external_id' => $externalId,
             'source' => $source,
-            'trackable_type' => static::class,
+            'trackable_type' => static::query()->getModel()->getMorphClass(),
         ])
             ->whereHas('trackable')
             ->first();
@@ -60,142 +84,35 @@ trait HasSyncTracking
     }
 
     /**
-     * Get the sync tracking information for this model.
+     * Get all sync tracking entries for this model, including the lifecycle
+     * row (filter it out with the withoutLifecycle scope).
      *
-     * @return MorphOne<SyncTrackedEntity, $this>
+     * @return MorphMany<SyncTrackedEntity, $this>
      */
-    public function syncTracking(): MorphOne
-    {
-        return $this->morphOne(SyncTrackedEntity::class, 'trackable');
-    }
-
-    /**
-     * Get all sync tracking entries for this model.
-     *
-     * @return \Illuminate\Database\Eloquent\Relations\MorphMany
-     */
-    public function syncTrackers()
+    public function syncTrackers(): MorphMany
     {
         return $this->morphMany(SyncTrackedEntity::class, 'trackable');
     }
 
     /**
-     * Mark this model as synced.
+     * Scope to models which have been synced to an integration — i.e. have a
+     * tracker row carrying an external_id. Pass a source to require a sync to
+     * that specific source; without one, a sync to any source counts.
+     *
+     * The external_id check also excludes the auto-created '_lifecycle' rows,
+     * since those never carry one.
+     *
+     * @param  Builder<static>  $query
+     * @return Builder<static>
      */
-    public function markAsSynced(?string $externalId = null, ?string $source = null, ?array $metadata = null): SyncTrackedEntity
+    public function scopeHasExternalId(Builder $query, ?string $source = null): Builder
     {
-        throw_if(
-            $this->relationLoaded('syncTracking') && $this->syncTracking->isDirty(),
-            'Please save your syncTracking model before using markAsSynced to avoid data loss'
-        );
+        return $query->whereHas('syncTrackers', function (Builder $query) use ($source): void {
+            $query->whereNotNull('external_id');
 
-        // The values to update
-        $values = [
-            'synced_at' => now(),
-        ];
-
-        if ($metadata !== null) {
-            $values['metadata'] = $metadata;
-        }
-
-        if ($externalId !== null) {
-            $values['external_id'] = $externalId;
-        }
-
-        // TODO: I believe source should be passed as a matching $attribute to avoid overwriting the wrong
-        //       source when calling markAsSynced for a different source.
-        if ($source !== null) {
-            $values['source'] = $source;
-        }
-
-        $return = $this->syncTracking()->updateOrCreate(
-            ['trackable_type' => get_class($this), 'trackable_id' => $this->getKey()],
-            $values,
-        );
-
-        if ($this->relationLoaded('syncTracking')) {
-            $this->syncTracking->refresh();
-        }
-
-        return $return;
-    }
-
-    /**
-     * Overwrite this models sync metadata with the given metadata.
-     */
-    public function setSyncMetadata(array $metadata, ?string $source = null): SyncTrackedEntity
-    {
-        throw_if(
-            $this->relationLoaded('syncTracking') && $this->syncTracking->isDirty(),
-            'Please save your syncTracking model before setting meta data to avoid data loss'
-        );
-        $return = $this->syncTracking()->updateOrCreate(
-            ['trackable_type' => get_class($this), 'trackable_id' => $this->getKey(), 'source' => $source],
-            [
-                'metadata' => $metadata,
-            ]
-        );
-
-        if ($this->relationLoaded('syncTracking')) {
-            $this->syncTracking->refresh();
-        }
-
-        return $return;
-    }
-
-    /**
-     * Update this models sync metadata with the given fields. Don't change the other fields.
-     */
-    public function mergeSyncMetadata(array $metadata, ?string $source = null): SyncTrackedEntity
-    {
-        return $this->setSyncMetadata(
-            [
-                ...($this->getSyncMetadata() ?? []),
-                ...$metadata,
-            ],
-            $source
-        );
-    }
-
-    /**
-     * Check if this model has been synced.
-     */
-    public function isSynced(): bool
-    {
-        return $this->syncTracking && $this->syncTracking->synced_at !== null;
-    }
-
-    /**
-     * Get the external ID for this model.
-     */
-    public function getExternalId(): ?string
-    {
-        return $this->syncTracking ? $this->syncTracking->external_id : null;
-    }
-
-    /**
-     * Get the external ID for this model from a specific source.
-     */
-    public function getExternalIdFromSource(string $source): ?string
-    {
-        return $this->syncTracking()
-            ->where('source', $source)
-            ->value('external_id');
-    }
-
-    /**
-     * Get the sync source for this model.
-     */
-    public function getSyncSource(): ?string
-    {
-        return $this->syncTracking ? $this->syncTracking->source : null;
-    }
-
-    /**
-     * Get the sync metadata for this model.
-     */
-    public function getSyncMetadata(): ?array
-    {
-        return $this->syncTracking ? $this->syncTracking->metadata : null;
+            if ($source !== null) {
+                $query->where('source', $source);
+            }
+        });
     }
 }

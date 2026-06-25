@@ -2,9 +2,10 @@
 
 use WizardingCode\FlowNetwork\SyncTracker\Facades\SyncTracker;
 use WizardingCode\FlowNetwork\SyncTracker\Tests\Models\TestModel;
+use WizardingCode\FlowNetwork\SyncTracker\Tests\TestCase;
 
 // Make sure to use the TestCase to have Laravel set up
-uses(WizardingCode\FlowNetwork\SyncTracker\Tests\TestCase::class);
+uses(TestCase::class);
 
 it('can find a model by external id', function () {
     $model = TestModel::create(['name' => 'Test Model']);

@@ -13,6 +13,13 @@ return [
     // The table name used to store sync tracking information
     'table_name' => 'sync_tracked_entities',
 
+    // Whether a tracking call may omit the sync source. It's recommended you disable
+    // this when working with multiple-sources to enable strict-mode and avoid
+    // accidentally using 'default'
+    // source. An empty source string always throws, and automatic lifecycle
+    // tracking (created/updated/deleted) is always exempt.
+    'allow_empty_source' => true,
+
     // Default tracking options
     'default_tracking' => [
         // Whether to track creation timestamps by default
